@@ -1,5 +1,5 @@
 import React from "react";
-import { Home } from "lucide-react";
+import { Home, ChevronRight } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { PlayButton } from "@/components/PlayButton";
 import { LetterSlots } from "@/components/LetterSlots";
@@ -25,6 +25,8 @@ interface LevelScreenProps {
   onSubmit: () => void;
   onHint: () => void;
   onHome: () => void;
+  onPreviousLevel: () => void;
+  canGoPrevious: boolean;
 }
 
 export const LevelScreen: React.FC<LevelScreenProps> = ({
@@ -43,18 +45,34 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   onSubmit,
   onHint,
   onHome,
+  onPreviousLevel,
+  canGoPrevious,
 }) => {
   return (
     <div className="min-h-screen flex flex-col safe-area-top safe-area-bottom">
       {/* Header */}
       <header className="flex items-center justify-between p-4 sm:p-5">
-        <button 
-          onClick={onHome} 
-          className="w-10 h-10 rounded-xl bg-muted/50 border border-border/40 
-                     flex items-center justify-center transition-all duration-200 active:scale-[0.96]"
-        >
-          <Home className="w-5 h-5 text-foreground" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onHome} 
+            className="w-10 h-10 rounded-xl bg-muted/50 border border-border/40 
+                       flex items-center justify-center transition-all duration-200 active:scale-[0.96]"
+          >
+            <Home className="w-5 h-5 text-foreground" />
+          </button>
+          
+          <button 
+            onClick={onPreviousLevel}
+            disabled={!canGoPrevious}
+            className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all duration-200
+              ${canGoPrevious 
+                ? "bg-muted/50 border-border/40 active:scale-[0.96]" 
+                : "bg-muted/20 border-border/20 opacity-40 cursor-not-allowed"
+              }`}
+          >
+            <ChevronRight className="w-5 h-5 text-foreground" />
+          </button>
+        </div>
         
         <div className="text-lg font-bold text-muted-foreground">
           שלב {levelNumber}/{totalLevels}

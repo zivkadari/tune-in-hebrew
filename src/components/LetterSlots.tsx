@@ -25,7 +25,7 @@ export const LetterSlots: React.FC<LetterSlotsProps> = ({ slots }) => {
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3 sm:gap-4 px-2">
+    <div className="flex flex-wrap justify-center gap-6 sm:gap-8 px-2">
       {words.map((word, wordIdx) => (
         <div key={wordIdx} className="flex gap-1.5">
           {word.map((slot) => {

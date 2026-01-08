@@ -2,6 +2,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LevelScreen } from "@/screens/LevelScreen";
 import { SuccessScreen } from "@/screens/SuccessScreen";
+import { LevelsScreen } from "@/screens/LevelsScreen";
 
 const Index = () => {
   const {
@@ -15,7 +16,9 @@ const Index = () => {
     isPlaying,
     activePianoKeys,
     totalLevels,
-    canContinue,
+    isFirstTime,
+    maxUnlockedLevel,
+    levels,
     startGame,
     continueGame,
     onBubbleClick,
@@ -24,6 +27,9 @@ const Index = () => {
     onHint,
     onPlay,
     nextLevel,
+    previousLevel,
+    openLevelsScreen,
+    selectLevel,
     goHome,
   } = useGameState();
 
@@ -31,9 +37,23 @@ const Index = () => {
     return (
       <HomeScreen
         coins={gameState.coins}
-        canContinue={canContinue}
+        isFirstTime={isFirstTime}
         onStart={startGame}
         onContinue={continueGame}
+        onLevels={openLevelsScreen}
+      />
+    );
+  }
+
+  if (screen === "levels") {
+    return (
+      <LevelsScreen
+        coins={gameState.coins}
+        levels={levels}
+        completedLevelIds={gameState.completedLevelIds}
+        maxUnlockedLevel={maxUnlockedLevel}
+        onSelectLevel={selectLevel}
+        onHome={goHome}
       />
     );
   }
@@ -70,6 +90,8 @@ const Index = () => {
         onSubmit={onSubmit}
         onHint={onHint}
         onHome={goHome}
+        onPreviousLevel={previousLevel}
+        canGoPrevious={currentLevel.id > 1}
       />
     );
   }

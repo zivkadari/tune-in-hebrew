@@ -1,19 +1,21 @@
 import React from "react";
-import { Music, Play, RotateCcw } from "lucide-react";
+import { Music, Play, RotateCcw, LayoutGrid } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 
 interface HomeScreenProps {
   coins: number;
-  canContinue: boolean;
+  isFirstTime: boolean;
   onStart: () => void;
   onContinue: () => void;
+  onLevels: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
   coins,
-  canContinue,
+  isFirstTime,
   onStart,
   onContinue,
+  onLevels,
 }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
@@ -64,23 +66,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         {/* Buttons */}
         <div className="flex flex-col gap-4 w-full">
-          <button 
-            onClick={onStart} 
-            className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
-          >
-            <Play className="w-6 h-6" fill="currentColor" />
-            <span>התחל משחק</span>
-          </button>
-
-          {canContinue && (
+          {isFirstTime ? (
+            <button 
+              onClick={onStart} 
+              className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
+            >
+              <Play className="w-6 h-6" fill="currentColor" />
+              <span>התחל משחק</span>
+            </button>
+          ) : (
             <button 
               onClick={onContinue} 
-              className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
+              className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
             >
-              <RotateCcw className="w-5 h-5" />
-              <span>המשך שלב אחרון</span>
+              <RotateCcw className="w-6 h-6" />
+              <span>המשך משחק</span>
             </button>
           )}
+
+          <button 
+            onClick={onLevels} 
+            className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
+          >
+            <LayoutGrid className="w-5 h-5" />
+            <span>שלבים</span>
+          </button>
         </div>
       </div>
 

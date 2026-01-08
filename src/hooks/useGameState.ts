@@ -86,7 +86,13 @@ export const useGameState = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePianoKeys, setActivePianoKeys] = useState<number[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [screen, setScreen] = useState<"home" | "level" | "success">("home");
+  const [screen, setScreen] = useState<"home" | "level" | "success" | "levels">("home");
+
+  // Computed values
+  const isFirstTime = gameState.completedLevelIds.length === 0;
+  const maxUnlockedLevel = gameState.completedLevelIds.length > 0
+    ? Math.max(...gameState.completedLevelIds) + 1
+    : 1;
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pianoIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -158,16 +164,18 @@ export const useGameState = () => {
   }, []);
 
   const startGame = useCallback(() => {
-    const levelId = gameState.completedLevelIds.length > 0 
-      ? Math.max(...gameState.completedLevelIds) + 1 
-      : 1;
-    const validLevelId = Math.min(levelId, levels.length);
-    initializeLevel(validLevelId);
-  }, [gameState.completedLevelIds, initializeLevel]);
+    // Always start from level 1 for new players
+    initializeLevel(1);
+  }, [initializeLevel]);
 
   const continueGame = useCallback(() => {
-    initializeLevel(gameState.currentLevelId);
-  }, [gameState.currentLevelId, initializeLevel]);
+    // Continue from the next uncompleted level
+    const nextLevelId = gameState.completedLevelIds.length > 0
+      ? Math.max(...gameState.completedLevelIds) + 1
+      : gameState.currentLevelId;
+    const validLevelId = Math.min(nextLevelId, levels.length);
+    initializeLevel(validLevelId);
+  }, [gameState.completedLevelIds, gameState.currentLevelId, initializeLevel]);
 
   const onBubbleClick = useCallback((bubbleId: string) => {
     const bubble = bubbles.find((b) => b.id === bubbleId);
@@ -413,6 +421,21 @@ export const useGameState = () => {
     initializeLevel(nextLevelId);
   }, [currentLevel, initializeLevel]);
 
+  const previousLevel = useCallback(() => {
+    if (!currentLevel || currentLevel.id <= 1) return;
+    initializeLevel(currentLevel.id - 1);
+  }, [currentLevel, initializeLevel]);
+
+  const openLevelsScreen = useCallback(() => {
+    setScreen("levels");
+  }, []);
+
+  const selectLevel = useCallback((levelId: number) => {
+    if (levelId <= maxUnlockedLevel) {
+      initializeLevel(levelId);
+    }
+  }, [maxUnlockedLevel, initializeLevel]);
+
   const goHome = useCallback(() => {
     setScreen("home");
     if (audioRef.current) {
@@ -451,7 +474,9 @@ export const useGameState = () => {
     activePianoKeys,
     showSuccess,
     totalLevels: levels.length,
-    canContinue: gameState.currentLevelId > 1 || gameState.completedLevelIds.length > 0,
+    isFirstTime,
+    maxUnlockedLevel,
+    levels,
 
     // Actions
     startGame,
@@ -462,6 +487,9 @@ export const useGameState = () => {
     onHint,
     onPlay,
     nextLevel,
+    previousLevel,
+    openLevelsScreen,
+    selectLevel,
     goHome,
   };
 };
