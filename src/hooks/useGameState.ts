@@ -242,7 +242,7 @@ export const useGameState = () => {
       const sortedAnswer = [...answerLetters].sort().join("");
 
       if (sortedUser === sortedAnswer) {
-        setMessage("את קרובה! האותיות נכונות אבל הסדר לא נכון");
+        setMessage("קרוב מאוד! האותיות נכונות אבל הסדר לא נכון");
         setMessageType("warning");
         return;
       }
@@ -261,7 +261,7 @@ export const useGameState = () => {
         return;
       }
 
-      setMessage("לא נכון, נסי שוב");
+      setMessage("לא נכון, נסו שוב");
       setMessageType("error");
     }
   }, [bubbles, slots, answerLetters, currentLevel]);
@@ -299,7 +299,7 @@ export const useGameState = () => {
     const allFilled = letterSlots.every((s) => s.value !== null);
 
     if (!allFilled) {
-      setMessage("עוד לא מילאת את כל האותיות");
+      setMessage("עוד לא מולאו כל האותיות");
       setMessageType("warning");
       return;
     }
@@ -326,7 +326,7 @@ export const useGameState = () => {
     const sortedAnswer = [...answerLetters].sort().join("");
 
     if (sortedUser === sortedAnswer) {
-      setMessage("את קרובה! האותיות נכונות אבל הסדר לא נכון");
+      setMessage("קרוב מאוד! האותיות נכונות אבל הסדר לא נכון");
       setMessageType("warning");
       return;
     }
@@ -345,7 +345,7 @@ export const useGameState = () => {
       return;
     }
 
-    setMessage("לא נכון, נסי שוב");
+    setMessage("לא נכון, נסו שוב");
     setMessageType("error");
   }, [slots, answerLetters, currentLevel]);
 
