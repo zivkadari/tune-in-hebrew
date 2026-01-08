@@ -15,6 +15,7 @@ const Index = () => {
     messageType,
     isPlaying,
     activePianoKeys,
+    audioProgress,
     totalLevels,
     isFirstTime,
     maxUnlockedLevel,
@@ -23,7 +24,6 @@ const Index = () => {
     continueGame,
     onBubbleClick,
     onUndo,
-    onSubmit,
     onHint,
     onPlay,
     nextLevel,
@@ -84,10 +84,10 @@ const Index = () => {
         messageType={messageType}
         isPlaying={isPlaying}
         activePianoKeys={activePianoKeys}
+        audioProgress={audioProgress}
         onPlay={onPlay}
         onBubbleClick={onBubbleClick}
         onUndo={onUndo}
-        onSubmit={onSubmit}
         onHint={onHint}
         onHome={goHome}
         onPreviousLevel={previousLevel}
