@@ -87,6 +87,8 @@ export const useGameState = () => {
   const [activePianoKeys, setActivePianoKeys] = useState<number[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [screen, setScreen] = useState<"home" | "level" | "success" | "levels">("home");
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
 
   // Computed values
   const isFirstTime = gameState.completedLevelIds.length === 0;
@@ -190,12 +192,13 @@ export const useGameState = () => {
     const slot = slots[nextEmptySlotIndex];
     if (slot.answerIndex === undefined) return;
 
-    // Update slot
-    setSlots((prev) =>
-      prev.map((s, idx) =>
-        idx === nextEmptySlotIndex ? { ...s, value: bubble.letter } : s
-      )
+    // Calculate new slots state
+    const newSlots = slots.map((s, idx) =>
+      idx === nextEmptySlotIndex ? { ...s, value: bubble.letter } : s
     );
+
+    // Update slot
+    setSlots(newSlots);
 
     // Mark bubble as used
     setBubbles((prev) =>
@@ -211,7 +214,57 @@ export const useGameState = () => {
     // Clear message
     setMessage(null);
     setMessageType(null);
-  }, [bubbles, slots]);
+
+    // Check if all slots are now filled - auto submit
+    const letterSlots = newSlots.filter((s) => s.type === "letter");
+    const allFilled = letterSlots.every((s) => s.value !== null);
+    
+    if (allFilled) {
+      // Get user's answer
+      const userAnswer = letterSlots.map((s) => s.value).join("");
+
+      // Check exact match
+      if (userAnswer === answerLetters) {
+        // Success!
+        setGameState((prev) => ({
+          ...prev,
+          coins: prev.coins + 5,
+          completedLevelIds: [...new Set([...prev.completedLevelIds, currentLevel!.id])],
+          currentLevelId: Math.min(currentLevel!.id + 1, levels.length),
+        }));
+        setShowSuccess(true);
+        setScreen("success");
+        return;
+      }
+
+      // Check if letters are correct but order is wrong
+      const sortedUser = [...userAnswer].sort().join("");
+      const sortedAnswer = [...answerLetters].sort().join("");
+
+      if (sortedUser === sortedAnswer) {
+        setMessage("את קרובה! האותיות נכונות אבל הסדר לא נכון");
+        setMessageType("warning");
+        return;
+      }
+
+      // Check if only one letter is wrong by position
+      let wrongCount = 0;
+      for (let i = 0; i < userAnswer.length; i++) {
+        if (userAnswer[i] !== answerLetters[i]) {
+          wrongCount++;
+        }
+      }
+
+      if (wrongCount === 1) {
+        setMessage("כמעט! רק אות אחת לא נכונה");
+        setMessageType("warning");
+        return;
+      }
+
+      setMessage("לא נכון, נסי שוב");
+      setMessageType("error");
+    }
+  }, [bubbles, slots, answerLetters, currentLevel]);
 
   const onUndo = useCallback(() => {
     if (inputHistory.length === 0) return;
@@ -375,6 +428,7 @@ export const useGameState = () => {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       setIsPlaying(false);
+      setAudioProgress(0);
       setActivePianoKeys([]);
       if (pianoIntervalRef.current) {
         clearInterval(pianoIntervalRef.current);
@@ -390,6 +444,19 @@ export const useGameState = () => {
 
     setIsPlaying(true);
 
+    // Get audio duration when metadata loads
+    audioRef.current.onloadedmetadata = () => {
+      setAudioDuration(audioRef.current?.duration || 0);
+    };
+
+    // Update progress as audio plays
+    audioRef.current.ontimeupdate = () => {
+      if (audioRef.current && audioRef.current.duration) {
+        const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+        setAudioProgress(progress);
+      }
+    };
+
     // Start piano animation
     pianoIntervalRef.current = setInterval(() => {
       const numKeys = Math.floor(Math.random() * 5) + 2; // 2-6 keys
@@ -403,6 +470,7 @@ export const useGameState = () => {
     // Handle audio end
     audioRef.current.onended = () => {
       setIsPlaying(false);
+      setAudioProgress(100);
       setActivePianoKeys([]);
       if (pianoIntervalRef.current) {
         clearInterval(pianoIntervalRef.current);
@@ -477,6 +545,8 @@ export const useGameState = () => {
     isFirstTime,
     maxUnlockedLevel,
     levels,
+    audioProgress,
+    audioDuration,
 
     // Actions
     startGame,

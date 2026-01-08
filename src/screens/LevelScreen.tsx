@@ -19,10 +19,10 @@ interface LevelScreenProps {
   messageType: "error" | "warning" | "success" | null;
   isPlaying: boolean;
   activePianoKeys: number[];
+  audioProgress: number;
   onPlay: () => void;
   onBubbleClick: (bubbleId: string) => void;
   onUndo: () => void;
-  onSubmit: () => void;
   onHint: () => void;
   onHome: () => void;
   onPreviousLevel: () => void;
@@ -39,10 +39,10 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   messageType,
   isPlaying,
   activePianoKeys,
+  audioProgress,
   onPlay,
   onBubbleClick,
   onUndo,
-  onSubmit,
   onHint,
   onHome,
   onPreviousLevel,
@@ -87,20 +87,19 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         <div className="w-full max-w-[520px]">
           <div className="piano-card">
             <Piano activeKeys={activePianoKeys} />
+            {/* Audio progress bar */}
+            <div className="audio-progress-bar mt-3">
+              <div 
+                className="audio-progress-fill" 
+                style={{ width: `${audioProgress}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Play button with equalizer */}
+        {/* Play button */}
         <div className="flex flex-col items-center gap-3">
           <PlayButton isPlaying={isPlaying} onPlay={onPlay} />
-          {isPlaying && (
-            <div className="equalizer">
-              <div className="equalizer-bar"></div>
-              <div className="equalizer-bar"></div>
-              <div className="equalizer-bar"></div>
-              <div className="equalizer-bar"></div>
-            </div>
-          )}
         </div>
 
         {/* Letter slots */}
@@ -117,7 +116,6 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         <div className="w-full max-w-[520px]">
           <ActionButtons
             onUndo={onUndo}
-            onSubmit={onSubmit}
             onHint={onHint}
             coins={coins}
           />
