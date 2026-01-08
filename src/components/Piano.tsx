@@ -13,50 +13,61 @@ export const Piano: React.FC<PianoProps> = ({ activeKeys }) => {
   const blackKeyPositions = [0, 1, 3, 4, 5, 7, 8, 10, 11, 12];
 
   return (
-    <div className="w-full overflow-hidden bg-gradient-to-t from-piano-black/50 to-transparent pt-4 pb-2">
-      <div className="relative flex justify-center">
+    <div className="w-full flex justify-center">
+      <div className="relative flex">
         {/* White keys */}
-        <div className="flex">
-          {whiteKeys.map((keyIndex) => (
-            <div
-              key={`white-${keyIndex}`}
-              className={`
-                h-24 sm:h-32 w-7 sm:w-9 
-                rounded-b-md border-x border-b border-border/20
-                transition-all duration-75
-                ${activeKeys.includes(keyIndex) 
-                  ? "bg-gradient-to-b from-piano-active to-coin-glow shadow-lg shadow-piano-active/50 scale-y-[0.97] origin-top" 
-                  : "bg-gradient-to-b from-piano-white to-piano-white/90"
-                }
-              `}
-            />
-          ))}
-        </div>
+        {whiteKeys.map((keyIndex) => (
+          <div
+            key={`white-${keyIndex}`}
+            className={`
+              h-20 sm:h-24 w-6 sm:w-8 
+              rounded-b-lg border-x border-b transition-all duration-75
+              ${activeKeys.includes(keyIndex) 
+                ? "scale-y-[0.97] origin-top" 
+                : ""
+              }
+            `}
+            style={{
+              background: activeKeys.includes(keyIndex)
+                ? 'linear-gradient(to bottom, hsl(42 100% 55%), hsl(42 100% 65%))'
+                : 'linear-gradient(to bottom, hsl(45 25% 96%), hsl(45 20% 90%))',
+              borderColor: 'hsl(230 30% 25% / 0.2)',
+              boxShadow: activeKeys.includes(keyIndex)
+                ? '0 4px 12px hsl(42 100% 50% / 0.5)'
+                : 'inset 0 -2px 4px hsl(230 30% 80% / 0.3)'
+            }}
+          />
+        ))}
         
         {/* Black keys overlay */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 flex">
+        <div className="absolute top-0 left-0 right-0 flex">
           {whiteKeys.slice(0, -1).map((keyIndex) => {
             const hasBlackKey = blackKeyPositions.includes(keyIndex);
             
             if (!hasBlackKey) {
-              return <div key={`spacer-${keyIndex}`} className="w-7 sm:w-9" />;
+              return <div key={`spacer-${keyIndex}`} className="w-6 sm:w-8" />;
             }
             
             const blackKeyIndex = 14 + blackKeyPositions.indexOf(keyIndex);
+            const isActive = activeKeys.includes(blackKeyIndex);
             
             return (
-              <div key={`black-${keyIndex}`} className="w-7 sm:w-9 flex justify-center">
+              <div key={`black-${keyIndex}`} className="w-6 sm:w-8 flex justify-end">
                 <div
                   className={`
-                    h-14 sm:h-20 w-4 sm:w-5 
-                    rounded-b-md z-10
+                    h-12 sm:h-14 w-4 sm:w-5 
+                    rounded-b-md z-10 -mr-2 sm:-mr-2.5
                     transition-all duration-75
-                    ${activeKeys.includes(blackKeyIndex)
-                      ? "bg-gradient-to-b from-accent to-accent/70 shadow-lg shadow-accent/50 scale-y-[0.95] origin-top"
-                      : "bg-gradient-to-b from-piano-black to-piano-black/90"
-                    }
+                    ${isActive ? "scale-y-[0.95] origin-top" : ""}
                   `}
-                  style={{ marginTop: "2px" }}
+                  style={{
+                    background: isActive
+                      ? 'linear-gradient(to bottom, hsl(210 90% 55%), hsl(210 85% 45%))'
+                      : 'linear-gradient(to bottom, hsl(230 50% 15%), hsl(230 45% 10%))',
+                    boxShadow: isActive
+                      ? '0 4px 12px hsl(210 90% 50% / 0.5)'
+                      : '0 2px 4px hsl(230 50% 5% / 0.5)'
+                  }}
                 />
               </div>
             );

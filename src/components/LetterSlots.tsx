@@ -27,8 +27,8 @@ export const LetterSlots: React.FC<LetterSlotsProps> = ({ slots }) => {
   return (
     <div className="flex flex-wrap justify-center gap-3 sm:gap-4 px-2">
       {words.map((word, wordIdx) => (
-        <div key={wordIdx} className="flex gap-1">
-          {word.map((slot, slotIdx) => {
+        <div key={wordIdx} className="flex gap-1.5">
+          {word.map((slot) => {
             const globalIdx = slots.indexOf(slot);
             
             if (slot.type === "fixed") {
@@ -46,7 +46,9 @@ export const LetterSlots: React.FC<LetterSlotsProps> = ({ slots }) => {
               <div
                 key={globalIdx}
                 className={`letter-slot ${
-                  slot.value ? "letter-slot-filled animate-bounce-in" : "letter-slot-empty"
+                  slot.value 
+                    ? "letter-slot-filled animate-bounce-in" 
+                    : "letter-slot-empty"
                 }`}
               >
                 {slot.value || ""}
