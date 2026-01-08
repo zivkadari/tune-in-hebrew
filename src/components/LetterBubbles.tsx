@@ -11,7 +11,7 @@ export const LetterBubbles: React.FC<LetterBubblesProps> = ({
   onBubbleClick,
 }) => {
   return (
-    <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 sm:gap-3 px-2 max-w-md mx-auto">
+    <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 sm:gap-3 px-2">
       {bubbles.map((bubble) => (
         <button
           key={bubble.id}

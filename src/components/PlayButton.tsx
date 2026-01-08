@@ -8,11 +8,14 @@ interface PlayButtonProps {
 
 export const PlayButton: React.FC<PlayButtonProps> = ({ isPlaying, onPlay }) => {
   return (
-    <button onClick={onPlay} className="play-button">
+    <button 
+      onClick={onPlay} 
+      className={`play-button ${isPlaying ? 'play-button-playing' : ''}`}
+    >
       {isPlaying ? (
-        <Pause className="w-12 h-12 sm:w-16 sm:h-16 text-primary-foreground" fill="currentColor" />
+        <Pause className="w-10 h-10 sm:w-12 sm:h-12 text-primary-foreground" fill="currentColor" />
       ) : (
-        <Play className="w-12 h-12 sm:w-16 sm:h-16 text-primary-foreground mr-[-4px]" fill="currentColor" />
+        <Play className="w-10 h-10 sm:w-12 sm:h-12 text-primary-foreground mr-[-3px]" fill="currentColor" />
       )}
     </button>
   );

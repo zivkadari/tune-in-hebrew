@@ -14,22 +14,31 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onHint,
   coins,
 }) => {
+  const canAffordHint = coins >= 3;
+
   return (
-    <div className="flex justify-center gap-3 sm:gap-4">
-      <button onClick={onUndo} className="btn-action">
+    <div className="action-bar">
+      <button 
+        onClick={onUndo} 
+        className="btn-action px-5"
+      >
         <Undo2 className="w-5 h-5" />
         <span className="hidden sm:inline">בטל</span>
       </button>
 
-      <button onClick={onSubmit} className="btn-primary flex items-center gap-2">
+      <button 
+        onClick={onSubmit} 
+        className="btn-primary flex items-center gap-2 px-6 py-3"
+      >
         <Check className="w-5 h-5" />
         <span>בדוק</span>
       </button>
 
       <button
         onClick={onHint}
-        className="btn-action"
-        title={coins < 3 ? "צריך 3 מטבעות" : "רמז (3 מטבעות)"}
+        disabled={!canAffordHint}
+        className="btn-action px-5"
+        title={!canAffordHint ? "צריך 3 מטבעות" : "רמז (3 מטבעות)"}
       >
         <Lightbulb className="w-5 h-5 text-coin" />
         <span className="text-sm text-muted-foreground">3</span>

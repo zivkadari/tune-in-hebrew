@@ -6,63 +6,74 @@
 
 @layer base {
   :root {
-    /* Musical night theme - deep blues with gold accents */
-    --background: 230 35% 7%;
+    /* Premium Game Theme - Rich blues with gold/amber accents */
+    --background: 230 40% 8%;
     --foreground: 45 100% 96%;
 
-    --card: 230 30% 12%;
+    --card: 230 35% 14%;
     --card-foreground: 45 100% 96%;
 
-    --popover: 230 30% 12%;
+    --popover: 230 35% 14%;
     --popover-foreground: 45 100% 96%;
 
-    --primary: 45 100% 50%;
-    --primary-foreground: 230 35% 7%;
+    /* Primary = Gold/Amber for CTA */
+    --primary: 42 100% 50%;
+    --primary-foreground: 230 40% 8%;
+    --primary-glow: 42 100% 60%;
 
-    --secondary: 230 40% 20%;
+    --secondary: 230 45% 22%;
     --secondary-foreground: 45 100% 96%;
 
-    --muted: 230 30% 18%;
-    --muted-foreground: 230 20% 60%;
+    --muted: 230 35% 20%;
+    --muted-foreground: 230 25% 55%;
 
-    --accent: 280 60% 50%;
+    /* Accent = Vibrant blue for letters/bubbles */
+    --accent: 210 90% 55%;
     --accent-foreground: 45 100% 96%;
+    --accent-glow: 210 90% 65%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 45 100% 96%;
 
-    --success: 142 70% 45%;
+    --success: 145 70% 45%;
     --success-foreground: 45 100% 96%;
 
-    --coin: 45 100% 50%;
-    --coin-glow: 45 100% 60%;
+    --coin: 45 100% 55%;
+    --coin-glow: 45 100% 70%;
 
-    --bubble: 200 80% 55%;
-    --bubble-hover: 200 85% 60%;
-    --bubble-used: 230 30% 25%;
+    --bubble: 210 85% 55%;
+    --bubble-hover: 210 90% 62%;
+    --bubble-used: 230 30% 28%;
 
-    --slot-empty: 230 40% 18%;
-    --slot-filled: 200 70% 45%;
-    --slot-fixed: 230 25% 30%;
+    --slot-empty: 230 45% 20%;
+    --slot-filled: 210 80% 50%;
+    --slot-fixed: 230 30% 35%;
 
-    --piano-white: 45 30% 95%;
-    --piano-black: 230 40% 10%;
-    --piano-active: 45 100% 50%;
+    --piano-white: 45 25% 96%;
+    --piano-black: 230 50% 8%;
+    --piano-active: 42 100% 55%;
 
-    --border: 230 30% 25%;
-    --input: 230 30% 20%;
-    --ring: 45 100% 50%;
+    --border: 230 35% 28%;
+    --input: 230 35% 22%;
+    --ring: 42 100% 55%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
+    --radius-lg: 1.5rem;
+    --radius-xl: 2rem;
 
-    --sidebar-background: 230 35% 7%;
+    /* Shadows */
+    --shadow-glow: 0 0 30px hsl(42 100% 50% / 0.25);
+    --shadow-card: 0 8px 32px hsl(230 50% 5% / 0.5);
+    --shadow-button: 0 4px 20px hsl(42 100% 50% / 0.35);
+
+    --sidebar-background: 230 40% 8%;
     --sidebar-foreground: 45 100% 96%;
-    --sidebar-primary: 45 100% 50%;
-    --sidebar-primary-foreground: 230 35% 7%;
-    --sidebar-accent: 230 40% 20%;
+    --sidebar-primary: 42 100% 50%;
+    --sidebar-primary-foreground: 230 40% 8%;
+    --sidebar-accent: 230 45% 22%;
     --sidebar-accent-foreground: 45 100% 96%;
-    --sidebar-border: 230 30% 25%;
-    --sidebar-ring: 45 100% 50%;
+    --sidebar-border: 230 35% 28%;
+    --sidebar-ring: 42 100% 50%;
   }
 }
 
@@ -80,103 +91,217 @@
     font-feature-settings: "kern" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(165deg, hsl(230 45% 12%) 0%, hsl(230 40% 8%) 50%, hsl(230 50% 5%) 100%);
+    min-height: 100vh;
+  }
+
+  /* iOS Safe Area */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
 @layer components {
+  /* Premium Glass Card */
+  .glass-card {
+    @apply bg-card/70 backdrop-blur-xl rounded-3xl;
+    border: 1px solid hsl(230 35% 35% / 0.4);
+    box-shadow: 
+      0 8px 32px hsl(230 50% 5% / 0.4),
+      inset 0 1px 0 hsl(45 100% 96% / 0.05);
+  }
+
+  .glass-card-glow {
+    @apply glass-card;
+    box-shadow: 
+      0 8px 32px hsl(230 50% 5% / 0.4),
+      0 0 40px hsl(42 100% 50% / 0.1),
+      inset 0 1px 0 hsl(45 100% 96% / 0.05);
+  }
+
+  /* Buttons */
   .btn-primary {
-    @apply bg-primary text-primary-foreground font-bold px-8 py-4 rounded-2xl 
-           shadow-lg shadow-primary/30 hover:shadow-primary/50 
-           transition-all duration-300 hover:scale-105 active:scale-95;
+    @apply bg-gradient-to-b from-primary to-primary/85 text-primary-foreground 
+           font-bold px-8 py-4 rounded-2xl
+           transition-all duration-200 active:scale-[0.98];
+    box-shadow: 
+      0 4px 20px hsl(42 100% 50% / 0.4),
+      inset 0 1px 0 hsl(45 100% 80% / 0.3);
+  }
+
+  .btn-primary:active {
+    box-shadow: 
+      0 2px 10px hsl(42 100% 50% / 0.3),
+      inset 0 1px 0 hsl(45 100% 80% / 0.2);
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground font-semibold px-6 py-3 rounded-xl
-           border border-border hover:bg-secondary/80 transition-all duration-200;
+    @apply bg-secondary/80 text-secondary-foreground font-semibold px-6 py-3 rounded-xl
+           border border-border/50 transition-all duration-200 active:scale-[0.98];
   }
 
   .btn-action {
-    @apply bg-muted text-foreground font-semibold px-4 py-3 rounded-xl
-           border border-border hover:bg-muted/80 transition-all duration-200
+    @apply bg-muted/60 text-foreground font-semibold px-4 py-3 rounded-xl
+           border border-border/40 backdrop-blur-sm
+           transition-all duration-200 active:scale-[0.98]
            flex items-center justify-center gap-2;
   }
 
+  .btn-action:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  /* Letter Bubbles - Big & finger-friendly */
   .letter-bubble {
     @apply w-12 h-12 sm:w-14 sm:h-14 rounded-2xl font-bold text-xl sm:text-2xl
            flex items-center justify-center cursor-pointer select-none
-           transition-all duration-200 active:scale-90;
+           transition-all duration-150;
   }
 
   .letter-bubble-active {
-    @apply bg-gradient-to-br from-bubble to-bubble/80 text-white
-           shadow-lg shadow-bubble/30 hover:shadow-bubble/50 hover:scale-105;
+    @apply text-white;
+    background: linear-gradient(145deg, hsl(210 85% 58%), hsl(210 90% 48%));
+    box-shadow: 
+      0 4px 16px hsl(210 85% 50% / 0.4),
+      inset 0 1px 0 hsl(210 90% 75% / 0.3);
+  }
+
+  .letter-bubble-active:active {
+    transform: scale(0.94);
+    box-shadow: 
+      0 2px 8px hsl(210 85% 50% / 0.3),
+      inset 0 1px 0 hsl(210 90% 75% / 0.2);
   }
 
   .letter-bubble-used {
-    @apply bg-bubble-used text-muted-foreground cursor-not-allowed opacity-50;
+    @apply bg-bubble-used/50 text-muted-foreground cursor-not-allowed;
+    opacity: 0.4;
   }
 
+  /* Letter Slots - Tiles with depth */
   .letter-slot {
     @apply w-10 h-12 sm:w-12 sm:h-14 rounded-xl font-bold text-xl sm:text-2xl
            flex items-center justify-center transition-all duration-200;
   }
 
   .letter-slot-empty {
-    @apply bg-slot-empty border-2 border-dashed border-border;
+    @apply bg-slot-empty/80;
+    border: 2px solid hsl(230 40% 32%);
+    box-shadow: inset 0 2px 4px hsl(230 50% 5% / 0.3);
   }
 
   .letter-slot-filled {
-    @apply bg-gradient-to-br from-slot-filled to-slot-filled/80 text-white
-           shadow-md shadow-slot-filled/30;
+    @apply text-white;
+    background: linear-gradient(145deg, hsl(210 80% 55%), hsl(210 85% 45%));
+    border: 2px solid hsl(210 85% 60%);
+    box-shadow: 
+      0 2px 8px hsl(210 85% 50% / 0.3),
+      inset 0 1px 0 hsl(210 90% 75% / 0.2);
   }
 
   .letter-slot-fixed {
-    @apply bg-slot-fixed text-muted-foreground;
+    @apply bg-slot-fixed/70 text-muted-foreground;
+    border: 2px solid transparent;
   }
 
+  /* Coin Display - HUD chip */
   .coin-display {
-    @apply flex items-center gap-2 bg-card/50 backdrop-blur-sm 
-           px-4 py-2 rounded-full border border-coin/30;
+    @apply flex items-center gap-2 px-4 py-2 rounded-full;
+    background: linear-gradient(145deg, hsl(230 35% 18%), hsl(230 40% 14%));
+    border: 1px solid hsl(45 100% 50% / 0.3);
+    box-shadow: 
+      0 2px 12px hsl(230 50% 5% / 0.3),
+      inset 0 1px 0 hsl(45 100% 96% / 0.05);
   }
 
   .coin-icon {
-    @apply w-6 h-6 rounded-full bg-gradient-to-br from-coin to-coin-glow
-           shadow-md shadow-coin/50 animate-pulse-slow;
+    @apply w-6 h-6 rounded-full;
+    background: linear-gradient(145deg, hsl(45 100% 65%), hsl(42 100% 50%));
+    box-shadow: 0 2px 8px hsl(42 100% 50% / 0.5);
   }
 
+  /* Play Button - Big & glowing */
   .play-button {
-    @apply w-24 h-24 sm:w-32 sm:h-32 rounded-full 
-           bg-gradient-to-br from-primary via-primary to-coin-glow
+    @apply w-20 h-20 sm:w-24 sm:h-24 rounded-full 
            flex items-center justify-center
-           shadow-2xl shadow-primary/40
-           transition-all duration-300 hover:scale-110 active:scale-95
-           animate-glow;
+           transition-all duration-200 active:scale-[0.96];
+    background: linear-gradient(145deg, hsl(42 100% 58%), hsl(42 100% 48%));
+    box-shadow: 
+      0 6px 30px hsl(42 100% 50% / 0.5),
+      0 0 60px hsl(42 100% 50% / 0.2),
+      inset 0 2px 0 hsl(45 100% 80% / 0.4);
   }
 
-  .piano-key-white {
-    @apply h-28 sm:h-36 w-8 sm:w-10 bg-piano-white rounded-b-lg
-           border border-border/30 transition-all duration-100;
+  .play-button:active {
+    box-shadow: 
+      0 3px 15px hsl(42 100% 50% / 0.4),
+      0 0 40px hsl(42 100% 50% / 0.15),
+      inset 0 1px 0 hsl(45 100% 80% / 0.3);
   }
 
-  .piano-key-white-active {
-    @apply bg-gradient-to-b from-piano-active to-coin-glow scale-y-95;
+  .play-button-playing {
+    animation: pulse-glow 1.5s ease-in-out infinite;
   }
 
-  .piano-key-black {
-    @apply h-16 sm:h-20 w-5 sm:w-6 bg-piano-black rounded-b-md
-           -mx-2.5 sm:-mx-3 z-10 transition-all duration-100;
+  /* Piano Card */
+  .piano-card {
+    @apply backdrop-blur-xl rounded-3xl p-4 sm:p-5;
+    background: hsl(230 30% 15% / 0.6);
+    border: 1px solid hsl(230 35% 35% / 0.3);
+    box-shadow: 
+      0 8px 32px hsl(230 50% 5% / 0.4),
+      inset 0 1px 0 hsl(45 100% 96% / 0.03);
   }
 
-  .piano-key-black-active {
-    @apply bg-gradient-to-b from-accent to-accent/80 scale-y-95;
+  /* Action Bar */
+  .action-bar {
+    @apply flex items-center justify-center gap-3 px-4 py-3 rounded-2xl backdrop-blur-xl;
+    background: hsl(230 35% 14% / 0.7);
+    border: 1px solid hsl(230 35% 30% / 0.4);
+    box-shadow: 0 4px 20px hsl(230 50% 5% / 0.3);
   }
 
-  .glass-card {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl;
+  /* Equalizer bars */
+  .equalizer {
+    @apply flex items-end gap-0.5 h-4;
   }
 
-  .success-glow {
-    @apply animate-success-glow;
+  .equalizer-bar {
+    @apply w-1 bg-primary rounded-full;
+    animation: equalizer 0.5s ease-in-out infinite alternate;
+  }
+
+  .equalizer-bar:nth-child(1) { animation-delay: 0s; height: 40%; }
+  .equalizer-bar:nth-child(2) { animation-delay: 0.1s; height: 70%; }
+  .equalizer-bar:nth-child(3) { animation-delay: 0.2s; height: 50%; }
+  .equalizer-bar:nth-child(4) { animation-delay: 0.15s; height: 80%; }
+
+  /* Message Display */
+  .message-card {
+    @apply px-5 py-3 rounded-xl text-center font-semibold;
+    backdrop-filter: blur(12px);
+  }
+
+  .message-error {
+    background: hsl(0 70% 50% / 0.2);
+    border: 1px solid hsl(0 70% 50% / 0.4);
+    color: hsl(0 80% 70%);
+  }
+
+  .message-warning {
+    background: hsl(42 80% 50% / 0.2);
+    border: 1px solid hsl(42 80% 50% / 0.4);
+    color: hsl(42 90% 70%);
+  }
+
+  .message-success {
+    background: hsl(145 60% 45% / 0.2);
+    border: 1px solid hsl(145 60% 45% / 0.4);
+    color: hsl(145 70% 65%);
   }
 }
 
@@ -194,7 +319,7 @@
   }
 
   .animate-bounce-in {
-    animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   .animate-shake {
@@ -208,11 +333,31 @@
 
 @keyframes glow {
   from {
-    box-shadow: 0 0 20px hsl(45 100% 50% / 0.3), 0 0 40px hsl(45 100% 50% / 0.2);
+    box-shadow: 0 0 20px hsl(42 100% 50% / 0.3), 0 0 40px hsl(42 100% 50% / 0.2);
   }
   to {
-    box-shadow: 0 0 30px hsl(45 100% 50% / 0.5), 0 0 60px hsl(45 100% 50% / 0.3);
+    box-shadow: 0 0 30px hsl(42 100% 50% / 0.5), 0 0 60px hsl(42 100% 50% / 0.3);
   }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      0 6px 30px hsl(42 100% 50% / 0.5),
+      0 0 60px hsl(42 100% 50% / 0.2),
+      inset 0 2px 0 hsl(45 100% 80% / 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 6px 40px hsl(42 100% 50% / 0.7),
+      0 0 80px hsl(42 100% 50% / 0.35),
+      inset 0 2px 0 hsl(45 100% 80% / 0.5);
+  }
+}
+
+@keyframes equalizer {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1); }
 }
 
 @keyframes success-glow {
@@ -221,7 +366,7 @@
     opacity: 0;
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
   100% {
     transform: scale(1);
@@ -234,9 +379,6 @@
     transform: scale(0);
     opacity: 0;
   }
-  50% {
-    transform: scale(1.1);
-  }
   100% {
     transform: scale(1);
     opacity: 1;
@@ -245,10 +387,10 @@
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-10px); }
-  40% { transform: translateX(10px); }
-  60% { transform: translateX(-10px); }
-  80% { transform: translateX(10px); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
 }
 
 @keyframes piano-hit {
