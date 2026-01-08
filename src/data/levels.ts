@@ -8,9 +8,9 @@ export interface Level {
 export const levels: Level[] = [
   {
     id: 1,
-    title: "ירושלים של זהב",
-    audioUrl: "/audio/level1.mp3",
-    extraLettersCount: 5,
+    title: "עוף מוזר",
+    audioUrl: "/audio/level1.m4a",
+    extraLettersCount: 4,
   },
   {
     id: 2,
