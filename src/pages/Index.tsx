@@ -85,6 +85,7 @@ const Index = () => {
         isPlaying={isPlaying}
         activePianoKeys={activePianoKeys}
         audioProgress={audioProgress}
+        questionType={currentLevel.questionType}
         onPlay={onPlay}
         onBubbleClick={onBubbleClick}
         onUndo={onUndo}

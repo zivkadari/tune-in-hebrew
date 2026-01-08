@@ -20,6 +20,7 @@ interface LevelScreenProps {
   isPlaying: boolean;
   activePianoKeys: number[];
   audioProgress: number;
+  questionType: "song" | "artist";
   onPlay: () => void;
   onBubbleClick: (bubbleId: string) => void;
   onUndo: () => void;
@@ -40,6 +41,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   isPlaying,
   activePianoKeys,
   audioProgress,
+  questionType,
   onPlay,
   onBubbleClick,
   onUndo,
@@ -93,6 +95,10 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
                 className="audio-progress-fill" 
                 style={{ width: `${audioProgress}%` }}
               />
+            </div>
+            {/* Question type label */}
+            <div className="text-center text-muted-foreground text-sm mt-3">
+              {questionType === "song" ? "שם השיר" : "שם האמן"}
             </div>
           </div>
         </div>

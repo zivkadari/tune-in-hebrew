@@ -60,7 +60,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             נחש את השיר
           </h1>
           <p className="text-muted-foreground text-lg">
-            האזיני לקטע והרכיבי את שם השיר
+            האזינו לקטע והרכיבו את שם השיר
           </p>
         </div>
 

@@ -258,16 +258,17 @@
   }
 
   /* Audio Progress Bar */
-  .audio-progress-bar {
-    @apply w-full h-2 rounded-full overflow-hidden;
-    background: hsl(230 40% 18%);
-  }
+.audio-progress-bar {
+  @apply w-full h-2 rounded-full overflow-hidden;
+  background: hsl(230 40% 18%);
+  direction: ltr;
+}
 
-  .audio-progress-fill {
-    @apply h-full rounded-full;
-    background: linear-gradient(90deg, hsl(42 100% 50%), hsl(42 100% 60%));
-    transition: width 0.1s linear;
-  }
+.audio-progress-fill {
+  @apply h-full rounded-full;
+  background: linear-gradient(90deg, hsl(42 100% 50%), hsl(42 100% 60%));
+  transition: width 0.05s linear;
+}
 
   /* Action Bar */
   .action-bar {
