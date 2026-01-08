@@ -1,14 +1,80 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useGameState } from "@/hooks/useGameState";
+import { HomeScreen } from "@/screens/HomeScreen";
+import { LevelScreen } from "@/screens/LevelScreen";
+import { SuccessScreen } from "@/screens/SuccessScreen";
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const {
+    screen,
+    gameState,
+    currentLevel,
+    slots,
+    bubbles,
+    message,
+    messageType,
+    isPlaying,
+    activePianoKeys,
+    totalLevels,
+    canContinue,
+    startGame,
+    continueGame,
+    onBubbleClick,
+    onUndo,
+    onSubmit,
+    onHint,
+    onPlay,
+    nextLevel,
+    goHome,
+  } = useGameState();
+
+  if (screen === "home") {
+    return (
+      <HomeScreen
+        coins={gameState.coins}
+        canContinue={canContinue}
+        onStart={startGame}
+        onContinue={continueGame}
+      />
+    );
+  }
+
+  if (screen === "success" && currentLevel) {
+    return (
+      <SuccessScreen
+        levelNumber={currentLevel.id}
+        totalLevels={totalLevels}
+        coins={gameState.coins}
+        songTitle={currentLevel.title}
+        onNextLevel={nextLevel}
+        onHome={goHome}
+        isLastLevel={currentLevel.id >= totalLevels}
+      />
+    );
+  }
+
+  if (screen === "level" && currentLevel) {
+    return (
+      <LevelScreen
+        levelNumber={currentLevel.id}
+        totalLevels={totalLevels}
+        coins={gameState.coins}
+        slots={slots}
+        bubbles={bubbles}
+        message={message}
+        messageType={messageType}
+        isPlaying={isPlaying}
+        activePianoKeys={activePianoKeys}
+        onPlay={onPlay}
+        onBubbleClick={onBubbleClick}
+        onUndo={onUndo}
+        onSubmit={onSubmit}
+        onHint={onHint}
+        onHome={goHome}
+      />
+    );
+  }
+
+  return null;
 };
 
 export default Index;

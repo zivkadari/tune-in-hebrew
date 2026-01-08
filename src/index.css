@@ -2,95 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Musical night theme - deep blues with gold accents */
+    --background: 230 35% 7%;
+    --foreground: 45 100% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 230 30% 12%;
+    --card-foreground: 45 100% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 230 30% 12%;
+    --popover-foreground: 45 100% 96%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 45 100% 50%;
+    --primary-foreground: 230 35% 7%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 230 40% 20%;
+    --secondary-foreground: 45 100% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 230 30% 18%;
+    --muted-foreground: 230 20% 60%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 280 60% 50%;
+    --accent-foreground: 45 100% 96%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 100% 96%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 70% 45%;
+    --success-foreground: 45 100% 96%;
 
-    --radius: 0.5rem;
+    --coin: 45 100% 50%;
+    --coin-glow: 45 100% 60%;
 
-    --sidebar-background: 0 0% 98%;
+    --bubble: 200 80% 55%;
+    --bubble-hover: 200 85% 60%;
+    --bubble-used: 230 30% 25%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --slot-empty: 230 40% 18%;
+    --slot-filled: 200 70% 45%;
+    --slot-fixed: 230 25% 30%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --piano-white: 45 30% 95%;
+    --piano-black: 230 40% 10%;
+    --piano-active: 45 100% 50%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --border: 230 30% 25%;
+    --input: 230 30% 20%;
+    --ring: 45 100% 50%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --radius: 1rem;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 230 35% 7%;
+    --sidebar-foreground: 45 100% 96%;
+    --sidebar-primary: 45 100% 50%;
+    --sidebar-primary-foreground: 230 35% 7%;
+    --sidebar-accent: 230 40% 20%;
+    --sidebar-accent-foreground: 45 100% 96%;
+    --sidebar-border: 230 30% 25%;
+    --sidebar-ring: 45 100% 50%;
   }
 }
 
@@ -99,7 +71,188 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html {
+    direction: rtl;
   }
+
+  body {
+    @apply bg-background text-foreground font-heebo antialiased;
+    font-feature-settings: "kern" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground font-bold px-8 py-4 rounded-2xl 
+           shadow-lg shadow-primary/30 hover:shadow-primary/50 
+           transition-all duration-300 hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-semibold px-6 py-3 rounded-xl
+           border border-border hover:bg-secondary/80 transition-all duration-200;
+  }
+
+  .btn-action {
+    @apply bg-muted text-foreground font-semibold px-4 py-3 rounded-xl
+           border border-border hover:bg-muted/80 transition-all duration-200
+           flex items-center justify-center gap-2;
+  }
+
+  .letter-bubble {
+    @apply w-12 h-12 sm:w-14 sm:h-14 rounded-2xl font-bold text-xl sm:text-2xl
+           flex items-center justify-center cursor-pointer select-none
+           transition-all duration-200 active:scale-90;
+  }
+
+  .letter-bubble-active {
+    @apply bg-gradient-to-br from-bubble to-bubble/80 text-white
+           shadow-lg shadow-bubble/30 hover:shadow-bubble/50 hover:scale-105;
+  }
+
+  .letter-bubble-used {
+    @apply bg-bubble-used text-muted-foreground cursor-not-allowed opacity-50;
+  }
+
+  .letter-slot {
+    @apply w-10 h-12 sm:w-12 sm:h-14 rounded-xl font-bold text-xl sm:text-2xl
+           flex items-center justify-center transition-all duration-200;
+  }
+
+  .letter-slot-empty {
+    @apply bg-slot-empty border-2 border-dashed border-border;
+  }
+
+  .letter-slot-filled {
+    @apply bg-gradient-to-br from-slot-filled to-slot-filled/80 text-white
+           shadow-md shadow-slot-filled/30;
+  }
+
+  .letter-slot-fixed {
+    @apply bg-slot-fixed text-muted-foreground;
+  }
+
+  .coin-display {
+    @apply flex items-center gap-2 bg-card/50 backdrop-blur-sm 
+           px-4 py-2 rounded-full border border-coin/30;
+  }
+
+  .coin-icon {
+    @apply w-6 h-6 rounded-full bg-gradient-to-br from-coin to-coin-glow
+           shadow-md shadow-coin/50 animate-pulse-slow;
+  }
+
+  .play-button {
+    @apply w-24 h-24 sm:w-32 sm:h-32 rounded-full 
+           bg-gradient-to-br from-primary via-primary to-coin-glow
+           flex items-center justify-center
+           shadow-2xl shadow-primary/40
+           transition-all duration-300 hover:scale-110 active:scale-95
+           animate-glow;
+  }
+
+  .piano-key-white {
+    @apply h-28 sm:h-36 w-8 sm:w-10 bg-piano-white rounded-b-lg
+           border border-border/30 transition-all duration-100;
+  }
+
+  .piano-key-white-active {
+    @apply bg-gradient-to-b from-piano-active to-coin-glow scale-y-95;
+  }
+
+  .piano-key-black {
+    @apply h-16 sm:h-20 w-5 sm:w-6 bg-piano-black rounded-b-md
+           -mx-2.5 sm:-mx-3 z-10 transition-all duration-100;
+  }
+
+  .piano-key-black-active {
+    @apply bg-gradient-to-b from-accent to-accent/80 scale-y-95;
+  }
+
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl;
+  }
+
+  .success-glow {
+    @apply animate-success-glow;
+  }
+}
+
+@layer utilities {
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  .animate-success-glow {
+    animation: success-glow 1s ease-out forwards;
+  }
+
+  .animate-bounce-in {
+    animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .animate-piano-hit {
+    animation: piano-hit 0.15s ease-out forwards;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px hsl(45 100% 50% / 0.3), 0 0 40px hsl(45 100% 50% / 0.2);
+  }
+  to {
+    box-shadow: 0 0 30px hsl(45 100% 50% / 0.5), 0 0 60px hsl(45 100% 50% / 0.3);
+  }
+}
+
+@keyframes success-glow {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-10px); }
+  80% { transform: translateX(10px); }
+}
+
+@keyframes piano-hit {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0.95); }
+  100% { transform: scaleY(1); }
 }
