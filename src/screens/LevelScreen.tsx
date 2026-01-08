@@ -60,9 +60,10 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-between p-4 gap-6 pb-0">
-        {/* Play button */}
-        <div className="flex-shrink-0">
+      <main className="flex-1 flex flex-col items-center p-4 gap-4 pb-0">
+        {/* Piano and Play button section - top center */}
+        <div className="flex flex-col items-center gap-4 w-full max-w-md">
+          <Piano activeKeys={activePianoKeys} />
           <PlayButton isPlaying={isPlaying} onPlay={onPlay} />
         </div>
 
@@ -87,13 +88,8 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         </div>
 
         {/* Letter bubbles */}
-        <div className="w-full">
-          <LetterBubbles bubbles={bubbles} onBubbleClick={onBubbleClick} />
-        </div>
-
-        {/* Piano - always at bottom */}
         <div className="w-full mt-auto">
-          <Piano activeKeys={activePianoKeys} />
+          <LetterBubbles bubbles={bubbles} onBubbleClick={onBubbleClick} />
         </div>
       </main>
     </div>
