@@ -1,5 +1,5 @@
 import React from "react";
-import { Music, Play, RotateCcw, LayoutGrid } from "lucide-react";
+import { Music, Play, RotateCcw, LayoutGrid, RefreshCw } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 
 interface HomeScreenProps {
@@ -7,6 +7,7 @@ interface HomeScreenProps {
   isFirstTime: boolean;
   onStart: () => void;
   onContinue: () => void;
+  onRestart: () => void;
   onLevels: () => void;
 }
 
@@ -15,6 +16,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   isFirstTime,
   onStart,
   onContinue,
+  onRestart,
   onLevels,
 }) => {
   return (
@@ -75,13 +77,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               <span>התחל משחק</span>
             </button>
           ) : (
-            <button 
-              onClick={onContinue} 
-              className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
-            >
-              <RotateCcw className="w-6 h-6" />
-              <span>המשך משחק</span>
-            </button>
+            <>
+              <button 
+                onClick={onContinue} 
+                className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
+              >
+                <RotateCcw className="w-6 h-6" />
+                <span>המשך משחק</span>
+              </button>
+              
+              <button 
+                onClick={onRestart} 
+                className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span>התחל מחדש</span>
+              </button>
+            </>
           )}
 
           <button 

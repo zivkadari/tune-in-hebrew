@@ -179,6 +179,19 @@ export const useGameState = () => {
     initializeLevel(validLevelId);
   }, [gameState.completedLevelIds, gameState.currentLevelId, initializeLevel]);
 
+  const restartGame = useCallback(() => {
+    // Reset to level 1, but keep completedLevelIds and coins!
+    setGameState((prev) => {
+      const newState = {
+        ...prev,
+        currentLevelId: 1,
+      };
+      saveGameState(newState);
+      return newState;
+    });
+    initializeLevel(1);
+  }, [initializeLevel]);
+
   const onBubbleClick = useCallback((bubbleId: string) => {
     const bubble = bubbles.find((b) => b.id === bubbleId);
     if (!bubble || bubble.used) return;
@@ -568,6 +581,7 @@ export const useGameState = () => {
     // Actions
     startGame,
     continueGame,
+    restartGame,
     onBubbleClick,
     onSlotClick,
     onClearAll,
