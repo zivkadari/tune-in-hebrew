@@ -266,29 +266,46 @@ export const useGameState = () => {
     }
   }, [bubbles, slots, answerLetters, currentLevel]);
 
-  const onUndo = useCallback(() => {
-    if (inputHistory.length === 0) return;
+  const onSlotClick = useCallback((slotIndex: number) => {
+    const slot = slots[slotIndex];
+    if (slot.type !== "letter" || slot.value === null) return;
 
-    const lastAction = inputHistory[inputHistory.length - 1];
+    // Find the history item for this slot
+    const historyItem = inputHistory.find(h => h.slotAnswerIndex === slot.answerIndex);
+    if (!historyItem) return;
 
     // Clear the slot
     setSlots((prev) =>
-      prev.map((s) =>
-        s.type === "letter" && s.answerIndex === lastAction.slotAnswerIndex
-          ? { ...s, value: null }
-          : s
-      )
+      prev.map((s, idx) => idx === slotIndex ? { ...s, value: null } : s)
     );
 
     // Restore bubble
     setBubbles((prev) =>
-      prev.map((b) =>
-        b.id === lastAction.bubbleId ? { ...b, used: false } : b
-      )
+      prev.map((b) => b.id === historyItem.bubbleId ? { ...b, used: false } : b)
     );
 
     // Remove from history
-    setInputHistory((prev) => prev.slice(0, -1));
+    setInputHistory((prev) => prev.filter(h => h.slotAnswerIndex !== slot.answerIndex));
+    setMessage(null);
+    setMessageType(null);
+  }, [slots, inputHistory]);
+
+  const onClearAll = useCallback(() => {
+    if (inputHistory.length === 0) return;
+
+    // Clear all letter slots
+    setSlots((prev) =>
+      prev.map((s) => s.type === "letter" ? { ...s, value: null } : s)
+    );
+
+    // Restore all used bubbles from history
+    const usedBubbleIds = inputHistory.map(h => h.bubbleId);
+    setBubbles((prev) =>
+      prev.map((b) => usedBubbleIds.includes(b.id) ? { ...b, used: false } : b)
+    );
+
+    // Clear history
+    setInputHistory([]);
     setMessage(null);
     setMessageType(null);
   }, [inputHistory]);
@@ -552,7 +569,8 @@ export const useGameState = () => {
     startGame,
     continueGame,
     onBubbleClick,
-    onUndo,
+    onSlotClick,
+    onClearAll,
     onSubmit,
     onHint,
     onPlay,
@@ -561,5 +579,8 @@ export const useGameState = () => {
     openLevelsScreen,
     selectLevel,
     goHome,
+
+    // Computed
+    hasFilledSlots: inputHistory.length > 0,
   };
 };

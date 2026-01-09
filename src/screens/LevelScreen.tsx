@@ -23,11 +23,13 @@ interface LevelScreenProps {
   questionType: "song" | "artist";
   onPlay: () => void;
   onBubbleClick: (bubbleId: string) => void;
-  onUndo: () => void;
+  onSlotClick: (slotIndex: number) => void;
+  onClearAll: () => void;
   onHint: () => void;
   onHome: () => void;
   onPreviousLevel: () => void;
   canGoPrevious: boolean;
+  hasFilledSlots: boolean;
 }
 
 export const LevelScreen: React.FC<LevelScreenProps> = ({
@@ -44,11 +46,13 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   questionType,
   onPlay,
   onBubbleClick,
-  onUndo,
+  onSlotClick,
+  onClearAll,
   onHint,
   onHome,
   onPreviousLevel,
   canGoPrevious,
+  hasFilledSlots,
 }) => {
   return (
     <div className="min-h-screen flex flex-col safe-area-top safe-area-bottom">
@@ -110,7 +114,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
 
         {/* Letter slots */}
         <div className="w-full max-w-[520px]">
-          <LetterSlots slots={slots} />
+          <LetterSlots slots={slots} onSlotClick={onSlotClick} />
         </div>
 
         {/* Message */}
@@ -121,9 +125,10 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         {/* Action buttons in bar */}
         <div className="w-full max-w-[520px]">
           <ActionButtons
-            onUndo={onUndo}
+            onClearAll={onClearAll}
             onHint={onHint}
             coins={coins}
+            hasFilledSlots={hasFilledSlots}
           />
         </div>
 
