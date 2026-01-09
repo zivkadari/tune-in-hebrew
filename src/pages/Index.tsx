@@ -23,7 +23,8 @@ const Index = () => {
     startGame,
     continueGame,
     onBubbleClick,
-    onUndo,
+    onSlotClick,
+    onClearAll,
     onHint,
     onPlay,
     nextLevel,
@@ -31,6 +32,7 @@ const Index = () => {
     openLevelsScreen,
     selectLevel,
     goHome,
+    hasFilledSlots,
   } = useGameState();
 
   if (screen === "home") {
@@ -88,11 +90,13 @@ const Index = () => {
         questionType={currentLevel.questionType}
         onPlay={onPlay}
         onBubbleClick={onBubbleClick}
-        onUndo={onUndo}
+        onSlotClick={onSlotClick}
+        onClearAll={onClearAll}
         onHint={onHint}
         onHome={goHome}
         onPreviousLevel={previousLevel}
         canGoPrevious={currentLevel.id > 1}
+        hasFilledSlots={hasFilledSlots}
       />
     );
   }

@@ -3,9 +3,10 @@ import { Slot } from "@/hooks/useGameState";
 
 interface LetterSlotsProps {
   slots: Slot[];
+  onSlotClick: (slotIndex: number) => void;
 }
 
-export const LetterSlots: React.FC<LetterSlotsProps> = ({ slots }) => {
+export const LetterSlots: React.FC<LetterSlotsProps> = ({ slots, onSlotClick }) => {
   // Group slots into words (split by fixed spaces)
   const words: Slot[][] = [];
   let currentWord: Slot[] = [];
@@ -42,16 +43,25 @@ export const LetterSlots: React.FC<LetterSlotsProps> = ({ slots }) => {
               );
             }
 
+            if (slot.value) {
+              return (
+                <button
+                  key={globalIdx}
+                  onClick={() => onSlotClick(globalIdx)}
+                  className="letter-slot letter-slot-filled animate-bounce-in cursor-pointer 
+                             hover:ring-2 hover:ring-primary/50 active:scale-95 transition-all"
+                >
+                  {slot.value}
+                </button>
+              );
+            }
+
             return (
               <div
                 key={globalIdx}
-                className={`letter-slot ${
-                  slot.value 
-                    ? "letter-slot-filled animate-bounce-in" 
-                    : "letter-slot-empty"
-                }`}
+                className="letter-slot letter-slot-empty"
               >
-                {slot.value || ""}
+                {""}
               </div>
             );
           })}

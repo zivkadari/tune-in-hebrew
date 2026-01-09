@@ -1,27 +1,31 @@
 import React from "react";
-import { Undo2, Lightbulb } from "lucide-react";
+import { Trash2, Lightbulb } from "lucide-react";
 
 interface ActionButtonsProps {
-  onUndo: () => void;
+  onClearAll: () => void;
   onHint: () => void;
   coins: number;
+  hasFilledSlots: boolean;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
-  onUndo,
+  onClearAll,
   onHint,
   coins,
+  hasFilledSlots,
 }) => {
   const canAffordHint = coins >= 3;
 
   return (
     <div className="action-bar">
       <button 
-        onClick={onUndo} 
+        onClick={onClearAll} 
+        disabled={!hasFilledSlots}
         className="btn-action px-5"
+        title="מחק הכל"
       >
-        <Undo2 className="w-5 h-5" />
-        <span className="hidden sm:inline">בטל</span>
+        <Trash2 className="w-5 h-5" />
+        <span className="hidden sm:inline">מחק הכל</span>
       </button>
 
       <button
