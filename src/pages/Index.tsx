@@ -22,6 +22,7 @@ const Index = () => {
     levels,
     startGame,
     continueGame,
+    restartGame,
     onBubbleClick,
     onSlotClick,
     onClearAll,
@@ -42,6 +43,7 @@ const Index = () => {
         isFirstTime={isFirstTime}
         onStart={startGame}
         onContinue={continueGame}
+        onRestart={restartGame}
         onLevels={openLevelsScreen}
       />
     );
