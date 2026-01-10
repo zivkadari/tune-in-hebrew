@@ -10,7 +10,8 @@ import { Piano } from "@/components/Piano";
 import { Slot, Bubble } from "@/hooks/useGameState";
 
 interface LevelScreenProps {
-  levelNumber: number;
+  songNumber: number;
+  stageNumber: number;
   totalLevels: number;
   coins: number;
   slots: Slot[];
@@ -33,7 +34,8 @@ interface LevelScreenProps {
 }
 
 export const LevelScreen: React.FC<LevelScreenProps> = ({
-  levelNumber,
+  songNumber,
+  stageNumber,
   totalLevels,
   coins,
   slots,
@@ -80,8 +82,13 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
           </button>
         </div>
         
-        <div className="text-lg font-bold text-muted-foreground">
-          שלב {levelNumber}/{totalLevels}
+        <div className="flex flex-col items-center">
+          <div className="text-lg font-bold text-foreground">
+            שלב {stageNumber}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            שיר {songNumber}/{totalLevels}
+          </div>
         </div>
         
         <CoinDisplay coins={coins} />
