@@ -3,23 +3,27 @@ import { Trophy, ArrowLeft, Home } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 
 interface SuccessScreenProps {
-  levelNumber: number;
+  songNumber: number;
+  stageNumber: number;
   totalLevels: number;
   coins: number;
   songTitle: string;
   onNextLevel: () => void;
   onHome: () => void;
   isLastLevel: boolean;
+  isLastSongInStage: boolean;
 }
 
 export const SuccessScreen: React.FC<SuccessScreenProps> = ({
-  levelNumber,
+  songNumber,
+  stageNumber,
   totalLevels,
   coins,
   songTitle,
   onNextLevel,
   onHome,
   isLastLevel,
+  isLastSongInStage,
 }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
@@ -61,14 +65,19 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
         {/* Success message */}
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl font-black mb-3 text-success">
-            כל הכבוד! 🎉
+            {isLastSongInStage ? "סיימת את השלב! 🏆" : "כל הכבוד! 🎉"}
           </h1>
           <p className="text-xl text-foreground font-bold mb-2">
             {songTitle}
           </p>
           <p className="text-muted-foreground">
-            שלב {levelNumber}/{totalLevels} הושלם
+            שיר {songNumber}/{totalLevels} • שלב {stageNumber}
           </p>
+          {isLastSongInStage && !isLastLevel && (
+            <p className="text-primary font-bold mt-2">
+              עוברים לשלב {stageNumber + 1}!
+            </p>
+          )}
           <div 
             className="mt-4 inline-flex items-center gap-2 px-5 py-2 rounded-full"
             style={{

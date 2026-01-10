@@ -6,6 +6,19 @@ export interface Level {
   questionType: "song" | "artist";
 }
 
+export const SONGS_PER_STAGE = 12;
+
+export const getStageNumber = (songId: number): number => Math.ceil(songId / SONGS_PER_STAGE);
+
+export const getSongNumberInStage = (songId: number): number => {
+  const remainder = songId % SONGS_PER_STAGE;
+  return remainder === 0 ? SONGS_PER_STAGE : remainder;
+};
+
+export const getTotalStages = (totalSongs: number): number => Math.ceil(totalSongs / SONGS_PER_STAGE);
+
+export const isLastSongInStage = (songId: number): boolean => songId % SONGS_PER_STAGE === 0;
+
 export const levels: Level[] = [
   {
     id: 1,

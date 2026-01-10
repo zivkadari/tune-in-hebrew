@@ -20,6 +20,8 @@ const Index = () => {
     isFirstTime,
     maxUnlockedLevel,
     levels,
+    currentStageNumber,
+    currentIsLastSongInStage,
     startGame,
     continueGame,
     restartGame,
@@ -65,13 +67,15 @@ const Index = () => {
   if (screen === "success" && currentLevel) {
     return (
       <SuccessScreen
-        levelNumber={currentLevel.id}
+        songNumber={currentLevel.id}
+        stageNumber={currentStageNumber}
         totalLevels={totalLevels}
         coins={gameState.coins}
         songTitle={currentLevel.title}
         onNextLevel={nextLevel}
         onHome={goHome}
         isLastLevel={currentLevel.id >= totalLevels}
+        isLastSongInStage={currentIsLastSongInStage}
       />
     );
   }
@@ -79,7 +83,8 @@ const Index = () => {
   if (screen === "level" && currentLevel) {
     return (
       <LevelScreen
-        levelNumber={currentLevel.id}
+        songNumber={currentLevel.id}
+        stageNumber={currentStageNumber}
         totalLevels={totalLevels}
         coins={gameState.coins}
         slots={slots}

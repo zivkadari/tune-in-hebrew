@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Level, levels } from "@/data/levels";
+import { Level, levels, getStageNumber, isLastSongInStage } from "@/data/levels";
 
 // Hebrew letters including final forms
 const HEBREW_LETTERS = "אבגדהוזחטיכלמנסעפצקרשתךםןףץ";
@@ -559,6 +559,10 @@ export const useGameState = () => {
     };
   }, []);
 
+  // Computed stage values
+  const currentStageNumber = currentLevel ? getStageNumber(currentLevel.id) : 1;
+  const currentIsLastSongInStage = currentLevel ? isLastSongInStage(currentLevel.id) : false;
+
   return {
     // State
     screen,
@@ -577,6 +581,10 @@ export const useGameState = () => {
     levels,
     audioProgress,
     audioDuration,
+
+    // Stage info
+    currentStageNumber,
+    currentIsLastSongInStage,
 
     // Actions
     startGame,
