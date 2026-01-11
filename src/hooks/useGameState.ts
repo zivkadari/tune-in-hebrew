@@ -108,6 +108,20 @@ export const useGameState = () => {
     const level = levels.find((l) => l.id === levelId);
     if (!level) return;
 
+    // Reset audio state when changing levels
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = level.audioUrl;
+    }
+    setIsPlaying(false);
+    setAudioProgress(0);
+    setActivePianoKeys([]);
+    if (pianoIntervalRef.current) {
+      clearInterval(pianoIntervalRef.current);
+      pianoIntervalRef.current = null;
+    }
+
     setCurrentLevel(level);
     setMessage(null);
     setMessageType(null);
@@ -451,7 +465,12 @@ export const useGameState = () => {
     if (!audioRef.current) {
       // Create audio element on first play (required for iOS)
       audioRef.current = new Audio();
-      audioRef.current.src = currentLevel?.audioUrl || "";
+    }
+    
+    // Always update the src to current level's audio
+    const currentAudioUrl = currentLevel?.audioUrl || "";
+    if (audioRef.current.src !== window.location.origin + currentAudioUrl) {
+      audioRef.current.src = currentAudioUrl;
     }
 
     if (isPlaying) {
