@@ -22,13 +22,16 @@ const Index = () => {
     levels,
     currentStageNumber,
     currentIsLastSongInStage,
+    hintsUsedInLevel,
     startGame,
     continueGame,
     restartGame,
     onBubbleClick,
     onSlotClick,
     onClearAll,
-    onHint,
+    onHintRevealLetter,
+    onHintRemoveFakes,
+    onHintSolveAll,
     onPlay,
     nextLevel,
     previousLevel,
@@ -36,6 +39,7 @@ const Index = () => {
     selectLevel,
     goHome,
     hasFilledSlots,
+    hasFakeBubbles,
   } = useGameState();
 
   if (screen === "home") {
@@ -76,6 +80,7 @@ const Index = () => {
         onHome={goHome}
         isLastLevel={currentLevel.id >= totalLevels}
         isLastSongInStage={currentIsLastSongInStage}
+        usedHints={hintsUsedInLevel}
       />
     );
   }
@@ -99,11 +104,14 @@ const Index = () => {
         onBubbleClick={onBubbleClick}
         onSlotClick={onSlotClick}
         onClearAll={onClearAll}
-        onHint={onHint}
+        onHintRevealLetter={onHintRevealLetter}
+        onHintRemoveFakes={onHintRemoveFakes}
+        onHintSolveAll={onHintSolveAll}
         onHome={goHome}
         onPreviousLevel={previousLevel}
         canGoPrevious={currentLevel.id > 1}
         hasFilledSlots={hasFilledSlots}
+        hasFakeBubbles={hasFakeBubbles}
       />
     );
   }

@@ -5,6 +5,14 @@ import { Level, levels, getStageNumber, isLastSongInStage } from "@/data/levels"
 const HEBREW_LETTERS = "אבגדהוזחטיכלמנסעפצקרשתךםןףץ";
 const HEBREW_LETTERS_NO_FINAL = "אבגדהוזחטיכלמנסעפצקרשת";
 
+// Constants for game economy
+const TOTAL_BUBBLES = 14;
+const HINT_COST_REVEAL_LETTER = 4;
+const HINT_COST_REMOVE_FAKES = 7;
+const HINT_COST_SOLVE_ALL = 18;
+const REWARD_BASE = 10;
+const REWARD_NO_HINTS_BONUS = 5;
+
 export interface Slot {
   type: "fixed" | "letter";
   char?: string;
@@ -89,6 +97,7 @@ export const useGameState = () => {
   const [screen, setScreen] = useState<"home" | "level" | "success" | "levels">("home");
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
+  const [hintsUsedInLevel, setHintsUsedInLevel] = useState(false);
 
   // Computed values
   const isFirstTime = gameState.completedLevelIds.length === 0;
@@ -127,6 +136,7 @@ export const useGameState = () => {
     setMessageType(null);
     setInputHistory([]);
     setShowSuccess(false);
+    setHintsUsedInLevel(false);
 
     // Create slots from title
     const newSlots: Slot[] = [];
@@ -154,7 +164,7 @@ export const useGameState = () => {
     setSlots(newSlots);
     setAnswerLetters(lettersOnly.join(""));
 
-    // Create bubbles with real letters + fake letters
+    // Create bubbles with real letters + fake letters (always TOTAL_BUBBLES = 14)
     const realBubbles: Bubble[] = lettersOnly.map((letter, idx) => ({
       id: `real-${idx}`,
       letter,
@@ -162,9 +172,8 @@ export const useGameState = () => {
       used: false,
     }));
 
-    // Calculate fake letters needed (at least 30% of total should be fake)
-    const minFakeCount = Math.ceil(lettersOnly.length * 0.3);
-    const fakeCount = Math.max(level.extraLettersCount, minFakeCount);
+    // Calculate fake letters needed to reach TOTAL_BUBBLES
+    const fakeCount = Math.max(0, TOTAL_BUBBLES - lettersOnly.length);
 
     const fakeBubbles: Bubble[] = Array.from({ length: fakeCount }, (_, idx) => ({
       id: `fake-${idx}`,
@@ -205,6 +214,22 @@ export const useGameState = () => {
     });
     initializeLevel(1);
   }, [initializeLevel]);
+
+  // Helper function to handle level completion
+  const handleLevelComplete = useCallback(() => {
+    const baseReward = REWARD_BASE;
+    const noHintBonus = hintsUsedInLevel ? 0 : REWARD_NO_HINTS_BONUS;
+    const totalReward = baseReward + noHintBonus;
+
+    setGameState((prev) => ({
+      ...prev,
+      coins: prev.coins + totalReward,
+      completedLevelIds: [...new Set([...prev.completedLevelIds, currentLevel!.id])],
+      currentLevelId: Math.min(currentLevel!.id + 1, levels.length),
+    }));
+    setShowSuccess(true);
+    setScreen("success");
+  }, [hintsUsedInLevel, currentLevel]);
 
   const onBubbleClick = useCallback((bubbleId: string) => {
     const bubble = bubbles.find((b) => b.id === bubbleId);
@@ -252,15 +277,10 @@ export const useGameState = () => {
 
       // Check exact match
       if (userAnswer === answerLetters) {
-        // Success!
-        setGameState((prev) => ({
-          ...prev,
-          coins: prev.coins + 5,
-          completedLevelIds: [...new Set([...prev.completedLevelIds, currentLevel!.id])],
-          currentLevelId: Math.min(currentLevel!.id + 1, levels.length),
-        }));
-        setShowSuccess(true);
-        setScreen("success");
+        // Success! - use setTimeout to ensure state updates complete first
+        setTimeout(() => {
+          handleLevelComplete();
+        }, 0);
         return;
       }
 
@@ -291,7 +311,7 @@ export const useGameState = () => {
       setMessage("לא נכון, נסו שוב");
       setMessageType("error");
     }
-  }, [bubbles, slots, answerLetters, currentLevel]);
+  }, [bubbles, slots, answerLetters, handleLevelComplete]);
 
   const onSlotClick = useCallback((slotIndex: number) => {
     const slot = slots[slotIndex];
@@ -354,14 +374,7 @@ export const useGameState = () => {
     // Check exact match
     if (userAnswer === answerLetters) {
       // Success!
-      setGameState((prev) => ({
-        ...prev,
-        coins: prev.coins + 5,
-        completedLevelIds: [...new Set([...prev.completedLevelIds, currentLevel!.id])],
-        currentLevelId: Math.min(currentLevel!.id + 1, levels.length),
-      }));
-      setShowSuccess(true);
-      setScreen("success");
+      handleLevelComplete();
       return;
     }
 
@@ -391,16 +404,17 @@ export const useGameState = () => {
 
     setMessage("לא נכון, נסו שוב");
     setMessageType("error");
-  }, [slots, answerLetters, currentLevel]);
+  }, [slots, answerLetters, handleLevelComplete]);
 
-  const onHint = useCallback(() => {
-    if (gameState.coins < 3) {
+  // Hint: Reveal one letter (4 coins)
+  const onHintRevealLetter = useCallback(() => {
+    if (gameState.coins < HINT_COST_REVEAL_LETTER) {
       setMessage("אין מספיק מטבעות");
       setMessageType("error");
       return;
     }
 
-    // Find empty letter slots that can be filled
+    // Find empty letter slots
     const emptySlotIndices: number[] = [];
     slots.forEach((slot, idx) => {
       if (slot.type === "letter" && slot.value === null) {
@@ -414,43 +428,119 @@ export const useGameState = () => {
       return;
     }
 
-    // Pick up to 2 random empty slots
-    const shuffledEmpty = shuffleArray(emptySlotIndices);
-    const slotsToFill = shuffledEmpty.slice(0, 2);
+    setHintsUsedInLevel(true);
 
-    // Deduct coins
+    // Pick 1 random empty slot
+    const randomSlotIdx = emptySlotIndices[Math.floor(Math.random() * emptySlotIndices.length)];
+    const slot = slots[randomSlotIdx];
+    if (slot.answerIndex === undefined) return;
+
+    const correctLetter = answerLetters[slot.answerIndex];
+
+    // Find an unused bubble with this letter (prefer real, non-fake)
+    const newBubbles = [...bubbles];
+    let bubbleIndex = newBubbles.findIndex(
+      (b) => !b.used && b.letter === correctLetter && !b.isFake
+    );
+    
+    if (bubbleIndex === -1) {
+      bubbleIndex = newBubbles.findIndex((b) => !b.used && b.letter === correctLetter);
+    }
+
+    if (bubbleIndex !== -1) {
+      const newSlots = [...slots];
+      newSlots[randomSlotIdx] = { ...slot, value: correctLetter };
+      newBubbles[bubbleIndex] = { ...newBubbles[bubbleIndex], used: true };
+
+      setSlots(newSlots);
+      setBubbles(newBubbles);
+      setInputHistory((prev) => [
+        ...prev,
+        { slotAnswerIndex: slot.answerIndex!, bubbleId: newBubbles[bubbleIndex].id },
+      ]);
+    }
+
     setGameState((prev) => ({
       ...prev,
-      coins: prev.coins - 3,
+      coins: prev.coins - HINT_COST_REVEAL_LETTER,
+    }));
+    setMessage(null);
+    setMessageType(null);
+  }, [gameState.coins, slots, bubbles, answerLetters]);
+
+  // Hint: Remove fake letters (7 coins)
+  const onHintRemoveFakes = useCallback(() => {
+    if (gameState.coins < HINT_COST_REMOVE_FAKES) {
+      setMessage("אין מספיק מטבעות");
+      setMessageType("error");
+      return;
+    }
+
+    // Check if there are any visible fake bubbles
+    const visibleFakes = bubbles.filter(b => b.isFake && !b.used);
+    if (visibleFakes.length === 0) {
+      setMessage("אין אותיות מיותרות להסיר");
+      setMessageType("warning");
+      return;
+    }
+
+    setHintsUsedInLevel(true);
+
+    // Mark all fake bubbles as used (hide them)
+    setBubbles((prev) =>
+      prev.map((b) => (b.isFake && !b.used ? { ...b, used: true } : b))
+    );
+
+    setGameState((prev) => ({
+      ...prev,
+      coins: prev.coins - HINT_COST_REMOVE_FAKES,
+    }));
+    setMessage("האותיות המיותרות הוסרו!");
+    setMessageType("success");
+  }, [gameState.coins, bubbles]);
+
+  // Hint: Solve all (18 coins)
+  const onHintSolveAll = useCallback(() => {
+    if (gameState.coins < HINT_COST_SOLVE_ALL) {
+      setMessage("אין מספיק מטבעות");
+      setMessageType("error");
+      return;
+    }
+
+    setHintsUsedInLevel(true);
+
+    // Deduct coins first
+    setGameState((prev) => ({
+      ...prev,
+      coins: prev.coins - HINT_COST_SOLVE_ALL,
     }));
 
-    // Fill slots with correct letters
+    // Fill all slots with correct letters
     const newSlots = [...slots];
     const newBubbles = [...bubbles];
     const newHistory = [...inputHistory];
 
-    slotsToFill.forEach((slotIdx) => {
-      const slot = newSlots[slotIdx];
-      if (slot.answerIndex === undefined) return;
+    slots.forEach((slot, slotIdx) => {
+      if (slot.type === "letter" && slot.value === null && slot.answerIndex !== undefined) {
+        const correctLetter = answerLetters[slot.answerIndex];
+        
+        // Find an unused bubble with this letter
+        let bubbleIndex = newBubbles.findIndex(
+          (b) => !b.used && b.letter === correctLetter && !b.isFake
+        );
+        
+        if (bubbleIndex === -1) {
+          bubbleIndex = newBubbles.findIndex((b) => !b.used && b.letter === correctLetter);
+        }
 
-      const correctLetter = answerLetters[slot.answerIndex];
-
-      // Find an unused bubble with this letter (prefer real, non-fake)
-      const bubbleIndex = newBubbles.findIndex(
-        (b) => !b.used && b.letter === correctLetter && !b.isFake
-      );
-      
-      const actualBubbleIndex = bubbleIndex !== -1 
-        ? bubbleIndex 
-        : newBubbles.findIndex((b) => !b.used && b.letter === correctLetter);
-
-      if (actualBubbleIndex !== -1) {
-        newSlots[slotIdx] = { ...slot, value: correctLetter };
-        newBubbles[actualBubbleIndex] = { ...newBubbles[actualBubbleIndex], used: true };
-        newHistory.push({
-          slotAnswerIndex: slot.answerIndex,
-          bubbleId: newBubbles[actualBubbleIndex].id,
-        });
+        if (bubbleIndex !== -1) {
+          newSlots[slotIdx] = { ...slot, value: correctLetter };
+          newBubbles[bubbleIndex] = { ...newBubbles[bubbleIndex], used: true };
+          newHistory.push({
+            slotAnswerIndex: slot.answerIndex,
+            bubbleId: newBubbles[bubbleIndex].id,
+          });
+        }
       }
     });
 
@@ -459,7 +549,15 @@ export const useGameState = () => {
     setInputHistory(newHistory);
     setMessage(null);
     setMessageType(null);
-  }, [gameState.coins, slots, bubbles, answerLetters, inputHistory]);
+
+    // After a short delay, complete the level
+    setTimeout(() => {
+      handleLevelComplete();
+    }, 500);
+  }, [gameState.coins, slots, bubbles, answerLetters, inputHistory, handleLevelComplete]);
+
+  // Keep legacy onHint for compatibility (will be removed later)
+  const onHint = onHintRevealLetter;
 
   const onPlay = useCallback(() => {
     if (!audioRef.current) {
@@ -582,6 +680,9 @@ export const useGameState = () => {
   const currentStageNumber = currentLevel ? getStageNumber(currentLevel.id) : 1;
   const currentIsLastSongInStage = currentLevel ? isLastSongInStage(currentLevel.id) : false;
 
+  // Check if there are visible fake bubbles
+  const hasFakeBubbles = bubbles.some(b => b.isFake && !b.used);
+
   return {
     // State
     screen,
@@ -600,6 +701,7 @@ export const useGameState = () => {
     levels,
     audioProgress,
     audioDuration,
+    hintsUsedInLevel,
 
     // Stage info
     currentStageNumber,
@@ -614,6 +716,9 @@ export const useGameState = () => {
     onClearAll,
     onSubmit,
     onHint,
+    onHintRevealLetter,
+    onHintRemoveFakes,
+    onHintSolveAll,
     onPlay,
     nextLevel,
     previousLevel,
@@ -623,5 +728,6 @@ export const useGameState = () => {
 
     // Computed
     hasFilledSlots: inputHistory.length > 0,
+    hasFakeBubbles,
   };
 };

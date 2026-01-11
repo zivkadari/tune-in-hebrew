@@ -12,6 +12,7 @@ interface SuccessScreenProps {
   onHome: () => void;
   isLastLevel: boolean;
   isLastSongInStage: boolean;
+  usedHints: boolean;
 }
 
 export const SuccessScreen: React.FC<SuccessScreenProps> = ({
@@ -24,7 +25,12 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   onHome,
   isLastLevel,
   isLastSongInStage,
+  usedHints,
 }) => {
+  const baseReward = 10;
+  const noHintBonus = usedHints ? 0 : 5;
+  const totalReward = baseReward + noHintBonus;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
       {/* Background celebration */}
@@ -78,15 +84,28 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
               עוברים לשלב {stageNumber + 1}!
             </p>
           )}
+          
+          {/* Reward breakdown */}
           <div 
-            className="mt-4 inline-flex items-center gap-2 px-5 py-2 rounded-full"
+            className="mt-4 inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl"
             style={{
               background: 'linear-gradient(145deg, hsl(45 100% 50% / 0.2), hsl(42 100% 50% / 0.1))',
               border: '1px solid hsl(45 100% 50% / 0.4)'
             }}
           >
-            <span className="text-coin font-bold text-lg">+5 מטבעות</span>
-            <span>🪙</span>
+            <div className="flex items-center gap-2">
+              <span className="text-coin font-bold text-lg">+{baseReward} מטבעות</span>
+              <span>🪙</span>
+            </div>
+            {!usedHints && (
+              <div className="flex items-center gap-1 text-success text-sm font-medium">
+                <span>+{noHintBonus} בונוס (בלי רמזים!)</span>
+                <span>✨</span>
+              </div>
+            )}
+            <div className="text-foreground font-bold text-base mt-1 border-t border-coin/30 pt-1 w-full text-center">
+              סה״כ: +{totalReward}
+            </div>
           </div>
         </div>
 

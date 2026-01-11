@@ -26,11 +26,14 @@ interface LevelScreenProps {
   onBubbleClick: (bubbleId: string) => void;
   onSlotClick: (slotIndex: number) => void;
   onClearAll: () => void;
-  onHint: () => void;
+  onHintRevealLetter: () => void;
+  onHintRemoveFakes: () => void;
+  onHintSolveAll: () => void;
   onHome: () => void;
   onPreviousLevel: () => void;
   canGoPrevious: boolean;
   hasFilledSlots: boolean;
+  hasFakeBubbles: boolean;
 }
 
 export const LevelScreen: React.FC<LevelScreenProps> = ({
@@ -50,11 +53,14 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   onBubbleClick,
   onSlotClick,
   onClearAll,
-  onHint,
+  onHintRevealLetter,
+  onHintRemoveFakes,
+  onHintSolveAll,
   onHome,
   onPreviousLevel,
   canGoPrevious,
   hasFilledSlots,
+  hasFakeBubbles,
 }) => {
   return (
     <div className="min-h-screen flex flex-col safe-area-top safe-area-bottom">
@@ -133,9 +139,12 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         <div className="w-full max-w-[520px]">
           <ActionButtons
             onClearAll={onClearAll}
-            onHint={onHint}
+            onHintRevealLetter={onHintRevealLetter}
+            onHintRemoveFakes={onHintRemoveFakes}
+            onHintSolveAll={onHintSolveAll}
             coins={coins}
             hasFilledSlots={hasFilledSlots}
+            hasFakeBubbles={hasFakeBubbles}
           />
         </div>
 
