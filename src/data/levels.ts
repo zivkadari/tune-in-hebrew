@@ -64,7 +64,7 @@ export const levels: Level[] = [
   },
   {
     id: 7,
-    title: "חופשיה",
+    title: "חופשייה",
     audioUrl: "/audio/level7.m4a",
     extraLettersCount: 4,
     questionType: "song",

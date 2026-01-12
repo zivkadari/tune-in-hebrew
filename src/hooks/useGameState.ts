@@ -50,7 +50,7 @@ const loadGameState = (): GameState => {
     console.error("Failed to load game state:", e);
   }
   return {
-    coins: 10,
+    coins: 0,
     currentLevelId: 1,
     completedLevelIds: [],
   };
