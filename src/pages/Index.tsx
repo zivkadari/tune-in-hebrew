@@ -3,6 +3,7 @@ import { HomeScreen } from "@/screens/HomeScreen";
 import { LevelScreen } from "@/screens/LevelScreen";
 import { SuccessScreen } from "@/screens/SuccessScreen";
 import { LevelsScreen } from "@/screens/LevelsScreen";
+import { NewGameNoticeDialog } from "@/components/NewGameNoticeDialog";
 
 const Index = () => {
   const {
@@ -23,9 +24,12 @@ const Index = () => {
     currentStageNumber,
     currentIsLastSongInStage,
     hintsUsedInLevel,
+    showNewGameNotice,
+    isFirstTimeCompletion,
     startGame,
     continueGame,
     restartGame,
+    handleNewGameNoticeClose,
     onBubbleClick,
     onSlotClick,
     onClearAll,
@@ -44,14 +48,20 @@ const Index = () => {
 
   if (screen === "home") {
     return (
-      <HomeScreen
-        coins={gameState.coins}
-        isFirstTime={isFirstTime}
-        onStart={startGame}
-        onContinue={continueGame}
-        onRestart={restartGame}
-        onLevels={openLevelsScreen}
-      />
+      <>
+        <HomeScreen
+          coins={gameState.coins}
+          isFirstTime={isFirstTime}
+          onStart={startGame}
+          onContinue={continueGame}
+          onRestart={restartGame}
+          onLevels={openLevelsScreen}
+        />
+        <NewGameNoticeDialog
+          open={showNewGameNotice}
+          onClose={handleNewGameNoticeClose}
+        />
+      </>
     );
   }
 
@@ -81,6 +91,7 @@ const Index = () => {
         isLastLevel={currentLevel.id >= totalLevels}
         isLastSongInStage={currentIsLastSongInStage}
         usedHints={hintsUsedInLevel}
+        isFirstTimeCompletion={isFirstTimeCompletion}
       />
     );
   }

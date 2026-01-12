@@ -39,6 +39,7 @@ interface GameState {
 }
 
 const STORAGE_KEY = "guess-the-song-state";
+const HIDE_NOTICE_KEY = "hide-new-game-notice";
 
 const loadGameState = (): GameState => {
   try {
@@ -62,6 +63,14 @@ const saveGameState = (state: GameState) => {
   } catch (e) {
     console.error("Failed to save game state:", e);
   }
+};
+
+const loadHideNotice = (): boolean => {
+  return localStorage.getItem(HIDE_NOTICE_KEY) === "true";
+};
+
+const saveHideNotice = (hide: boolean) => {
+  localStorage.setItem(HIDE_NOTICE_KEY, hide.toString());
 };
 
 const isHebrewLetter = (char: string): boolean => {
@@ -98,6 +107,7 @@ export const useGameState = () => {
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [hintsUsedInLevel, setHintsUsedInLevel] = useState(false);
+  const [showNewGameNotice, setShowNewGameNotice] = useState(false);
 
   // Computed values
   const isFirstTime = gameState.completedLevelIds.length === 0;
@@ -212,24 +222,42 @@ export const useGameState = () => {
       saveGameState(newState);
       return newState;
     });
+    
+    // Show notice if not hidden
+    if (!loadHideNotice()) {
+      setShowNewGameNotice(true);
+    } else {
+      initializeLevel(1);
+    }
+  }, [initializeLevel]);
+
+  const handleNewGameNoticeClose = useCallback((dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      saveHideNotice(true);
+    }
+    setShowNewGameNotice(false);
     initializeLevel(1);
   }, [initializeLevel]);
 
   // Helper function to handle level completion
   const handleLevelComplete = useCallback(() => {
-    const baseReward = REWARD_BASE;
-    const noHintBonus = hintsUsedInLevel ? 0 : REWARD_NO_HINTS_BONUS;
+    const levelId = currentLevel!.id;
+    const isFirstTimeCompletion = !gameState.completedLevelIds.includes(levelId);
+    
+    // Only give rewards for first-time completions
+    const baseReward = isFirstTimeCompletion ? REWARD_BASE : 0;
+    const noHintBonus = isFirstTimeCompletion && !hintsUsedInLevel ? REWARD_NO_HINTS_BONUS : 0;
     const totalReward = baseReward + noHintBonus;
 
     setGameState((prev) => ({
       ...prev,
       coins: prev.coins + totalReward,
-      completedLevelIds: [...new Set([...prev.completedLevelIds, currentLevel!.id])],
-      currentLevelId: Math.min(currentLevel!.id + 1, levels.length),
+      completedLevelIds: [...new Set([...prev.completedLevelIds, levelId])],
+      currentLevelId: Math.min(levelId + 1, levels.length),
     }));
     setShowSuccess(true);
     setScreen("success");
-  }, [hintsUsedInLevel, currentLevel]);
+  }, [hintsUsedInLevel, currentLevel, gameState.completedLevelIds]);
 
   const onBubbleClick = useCallback((bubbleId: string) => {
     const bubble = bubbles.find((b) => b.id === bubbleId);
@@ -683,6 +711,11 @@ export const useGameState = () => {
   // Check if there are visible fake bubbles
   const hasFakeBubbles = bubbles.some(b => b.isFake && !b.used);
 
+  // Computed: is this level being completed for the first time?
+  const isFirstTimeCompletion = currentLevel 
+    ? !gameState.completedLevelIds.includes(currentLevel.id) 
+    : false;
+
   return {
     // State
     screen,
@@ -702,6 +735,8 @@ export const useGameState = () => {
     audioProgress,
     audioDuration,
     hintsUsedInLevel,
+    showNewGameNotice,
+    isFirstTimeCompletion,
 
     // Stage info
     currentStageNumber,
@@ -711,6 +746,7 @@ export const useGameState = () => {
     startGame,
     continueGame,
     restartGame,
+    handleNewGameNoticeClose,
     onBubbleClick,
     onSlotClick,
     onClearAll,

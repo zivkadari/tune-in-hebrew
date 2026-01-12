@@ -13,6 +13,7 @@ interface SuccessScreenProps {
   isLastLevel: boolean;
   isLastSongInStage: boolean;
   usedHints: boolean;
+  isFirstTimeCompletion: boolean;
 }
 
 export const SuccessScreen: React.FC<SuccessScreenProps> = ({
@@ -26,9 +27,11 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   isLastLevel,
   isLastSongInStage,
   usedHints,
+  isFirstTimeCompletion,
 }) => {
-  const baseReward = 10;
-  const noHintBonus = usedHints ? 0 : 5;
+  // Only give rewards for first-time completions
+  const baseReward = isFirstTimeCompletion ? 10 : 0;
+  const noHintBonus = isFirstTimeCompletion && !usedHints ? 5 : 0;
   const totalReward = baseReward + noHintBonus;
 
   return (
@@ -86,27 +89,44 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
           )}
           
           {/* Reward breakdown */}
-          <div 
-            className="mt-4 inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl"
-            style={{
-              background: 'linear-gradient(145deg, hsl(45 100% 50% / 0.2), hsl(42 100% 50% / 0.1))',
-              border: '1px solid hsl(45 100% 50% / 0.4)'
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-coin font-bold text-lg">+{baseReward} מטבעות</span>
-              <span>🪙</span>
-            </div>
-            {!usedHints && (
-              <div className="flex items-center gap-1 text-success text-sm font-medium">
-                <span>+{noHintBonus} בונוס (בלי רמזים!)</span>
-                <span>✨</span>
+          {isFirstTimeCompletion ? (
+            <div 
+              className="mt-4 inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl"
+              style={{
+                background: 'linear-gradient(145deg, hsl(45 100% 50% / 0.2), hsl(42 100% 50% / 0.1))',
+                border: '1px solid hsl(45 100% 50% / 0.4)'
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-coin font-bold text-lg">+{baseReward} מטבעות</span>
+                <span>🪙</span>
               </div>
-            )}
-            <div className="text-foreground font-bold text-base mt-1 border-t border-coin/30 pt-1 w-full text-center">
-              סה״כ: +{totalReward}
+              {!usedHints && (
+                <div className="flex items-center gap-1 text-success text-sm font-medium">
+                  <span>+{noHintBonus} בונוס (בלי רמזים!)</span>
+                  <span>✨</span>
+                </div>
+              )}
+              <div className="text-foreground font-bold text-base mt-1 border-t border-coin/30 pt-1 w-full text-center">
+                סה״כ: +{totalReward}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div 
+              className="mt-4 inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl"
+              style={{
+                background: 'linear-gradient(145deg, hsl(220 10% 50% / 0.2), hsl(220 10% 40% / 0.1))',
+                border: '1px solid hsl(220 10% 50% / 0.3)'
+              }}
+            >
+              <p className="text-muted-foreground text-sm">
+                שלב כבר הושלם בעבר
+              </p>
+              <p className="text-muted-foreground text-xs">
+                אין מטבעות נוספים
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Buttons */}
