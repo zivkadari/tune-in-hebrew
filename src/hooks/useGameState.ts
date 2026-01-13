@@ -108,6 +108,7 @@ export const useGameState = () => {
   const [audioDuration, setAudioDuration] = useState(0);
   const [hintsUsedInLevel, setHintsUsedInLevel] = useState(false);
   const [showNewGameNotice, setShowNewGameNotice] = useState(false);
+  const [isFirstTimeCompletion, setIsFirstTimeCompletion] = useState(false);
 
   // Computed values
   const isFirstTime = gameState.completedLevelIds.length === 0;
@@ -147,6 +148,7 @@ export const useGameState = () => {
     setInputHistory([]);
     setShowSuccess(false);
     setHintsUsedInLevel(false);
+    setIsFirstTimeCompletion(false);
 
     // Create slots from title
     const newSlots: Slot[] = [];
@@ -242,11 +244,14 @@ export const useGameState = () => {
   // Helper function to handle level completion
   const handleLevelComplete = useCallback(() => {
     const levelId = currentLevel!.id;
-    const isFirstTimeCompletion = !gameState.completedLevelIds.includes(levelId);
+    const wasFirstTime = !gameState.completedLevelIds.includes(levelId);
+    
+    // Save this value BEFORE updating state, so SuccessScreen gets the correct value
+    setIsFirstTimeCompletion(wasFirstTime);
     
     // Only give rewards for first-time completions
-    const baseReward = isFirstTimeCompletion ? REWARD_BASE : 0;
-    const noHintBonus = isFirstTimeCompletion && !hintsUsedInLevel ? REWARD_NO_HINTS_BONUS : 0;
+    const baseReward = wasFirstTime ? REWARD_BASE : 0;
+    const noHintBonus = wasFirstTime && !hintsUsedInLevel ? REWARD_NO_HINTS_BONUS : 0;
     const totalReward = baseReward + noHintBonus;
 
     setGameState((prev) => ({
@@ -710,11 +715,6 @@ export const useGameState = () => {
 
   // Check if there are visible fake bubbles
   const hasFakeBubbles = bubbles.some(b => b.isFake && !b.used);
-
-  // Computed: is this level being completed for the first time?
-  const isFirstTimeCompletion = currentLevel 
-    ? !gameState.completedLevelIds.includes(currentLevel.id) 
-    : false;
 
   return {
     // State
