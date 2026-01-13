@@ -30,12 +30,14 @@ export interface Bubble {
 export interface HistoryItem {
   slotAnswerIndex: number;
   bubbleId: string;
+  isHint?: boolean;
 }
 
 interface GameState {
   coins: number;
   currentLevelId: number;
   completedLevelIds: number[];
+  hintsUsedByLevel: Record<number, boolean>;
 }
 
 const STORAGE_KEY = "guess-the-song-state";
@@ -45,7 +47,11 @@ const loadGameState = (): GameState => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        hintsUsedByLevel: parsed.hintsUsedByLevel || {},
+      };
     }
   } catch (e) {
     console.error("Failed to load game state:", e);
@@ -54,6 +60,7 @@ const loadGameState = (): GameState => {
     coins: 0,
     currentLevelId: 1,
     completedLevelIds: [],
+    hintsUsedByLevel: {},
   };
 };
 
@@ -118,6 +125,12 @@ export const useGameState = () => {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pianoIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hintsUsedRef = useRef(false);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    hintsUsedRef.current = hintsUsedInLevel;
+  }, [hintsUsedInLevel]);
 
   // Save game state whenever it changes
   useEffect(() => {
@@ -147,7 +160,11 @@ export const useGameState = () => {
     setMessageType(null);
     setInputHistory([]);
     setShowSuccess(false);
-    setHintsUsedInLevel(false);
+    // Load hints used state from persisted game state
+    const savedState = loadGameState();
+    const levelHintsUsed = savedState.hintsUsedByLevel[levelId] || false;
+    setHintsUsedInLevel(levelHintsUsed);
+    hintsUsedRef.current = levelHintsUsed;
     setIsFirstTimeCompletion(false);
 
     // Create slots from title
@@ -249,9 +266,12 @@ export const useGameState = () => {
     // Save this value BEFORE updating state, so SuccessScreen gets the correct value
     setIsFirstTimeCompletion(wasFirstTime);
     
+    // Use ref to get the current value (avoids stale closure issue with setTimeout)
+    const usedHints = hintsUsedRef.current;
+    
     // Only give rewards for first-time completions
     const baseReward = wasFirstTime ? REWARD_BASE : 0;
-    const noHintBonus = wasFirstTime && !hintsUsedInLevel ? REWARD_NO_HINTS_BONUS : 0;
+    const noHintBonus = wasFirstTime && !usedHints ? REWARD_NO_HINTS_BONUS : 0;
     const totalReward = baseReward + noHintBonus;
 
     setGameState((prev) => ({
@@ -262,7 +282,7 @@ export const useGameState = () => {
     }));
     setShowSuccess(true);
     setScreen("success");
-  }, [hintsUsedInLevel, currentLevel, gameState.completedLevelIds]);
+  }, [currentLevel, gameState.completedLevelIds]);
 
   const onBubbleClick = useCallback((bubbleId: string) => {
     const bubble = bubbles.find((b) => b.id === bubbleId);
@@ -371,21 +391,33 @@ export const useGameState = () => {
   }, [slots, inputHistory]);
 
   const onClearAll = useCallback(() => {
-    if (inputHistory.length === 0) return;
+    // Filter only non-hint items
+    const nonHintHistory = inputHistory.filter(h => !h.isHint);
+    const hintHistory = inputHistory.filter(h => h.isHint);
+    
+    if (nonHintHistory.length === 0) return;
 
-    // Clear all letter slots
+    // Get hint slot indices to preserve
+    const hintSlotIndices = new Set(hintHistory.map(h => h.slotAnswerIndex));
+
+    // Clear only non-hint letter slots
     setSlots((prev) =>
-      prev.map((s) => s.type === "letter" ? { ...s, value: null } : s)
+      prev.map((s) => {
+        if (s.type === "letter" && s.answerIndex !== undefined && !hintSlotIndices.has(s.answerIndex)) {
+          return { ...s, value: null };
+        }
+        return s;
+      })
     );
 
-    // Restore all used bubbles from history
-    const usedBubbleIds = inputHistory.map(h => h.bubbleId);
+    // Restore only non-hint bubbles
+    const nonHintBubbleIds = nonHintHistory.map(h => h.bubbleId);
     setBubbles((prev) =>
-      prev.map((b) => usedBubbleIds.includes(b.id) ? { ...b, used: false } : b)
+      prev.map((b) => nonHintBubbleIds.includes(b.id) ? { ...b, used: false } : b)
     );
 
-    // Clear history
-    setInputHistory([]);
+    // Keep only hint history items
+    setInputHistory(hintHistory);
     setMessage(null);
     setMessageType(null);
   }, [inputHistory]);
@@ -462,6 +494,15 @@ export const useGameState = () => {
     }
 
     setHintsUsedInLevel(true);
+    hintsUsedRef.current = true;
+
+    // Persist hints used for this level
+    if (currentLevel) {
+      setGameState((prev) => ({
+        ...prev,
+        hintsUsedByLevel: { ...prev.hintsUsedByLevel, [currentLevel.id]: true },
+      }));
+    }
 
     // Pick 1 random empty slot
     const randomSlotIdx = emptySlotIndices[Math.floor(Math.random() * emptySlotIndices.length)];
@@ -489,7 +530,7 @@ export const useGameState = () => {
       setBubbles(newBubbles);
       setInputHistory((prev) => [
         ...prev,
-        { slotAnswerIndex: slot.answerIndex!, bubbleId: newBubbles[bubbleIndex].id },
+        { slotAnswerIndex: slot.answerIndex!, bubbleId: newBubbles[bubbleIndex].id, isHint: true },
       ]);
     }
 
@@ -499,7 +540,7 @@ export const useGameState = () => {
     }));
     setMessage(null);
     setMessageType(null);
-  }, [gameState.coins, slots, bubbles, answerLetters]);
+  }, [gameState.coins, slots, bubbles, answerLetters, currentLevel]);
 
   // Hint: Remove fake letters (7 coins)
   const onHintRemoveFakes = useCallback(() => {
@@ -518,19 +559,30 @@ export const useGameState = () => {
     }
 
     setHintsUsedInLevel(true);
+    hintsUsedRef.current = true;
+
+    // Persist hints used for this level
+    if (currentLevel) {
+      setGameState((prev) => ({
+        ...prev,
+        hintsUsedByLevel: { ...prev.hintsUsedByLevel, [currentLevel.id]: true },
+        coins: prev.coins - HINT_COST_REMOVE_FAKES,
+      }));
+    } else {
+      setGameState((prev) => ({
+        ...prev,
+        coins: prev.coins - HINT_COST_REMOVE_FAKES,
+      }));
+    }
 
     // Mark all fake bubbles as used (hide them)
     setBubbles((prev) =>
       prev.map((b) => (b.isFake && !b.used ? { ...b, used: true } : b))
     );
 
-    setGameState((prev) => ({
-      ...prev,
-      coins: prev.coins - HINT_COST_REMOVE_FAKES,
-    }));
     setMessage("האותיות המיותרות הוסרו!");
     setMessageType("success");
-  }, [gameState.coins, bubbles]);
+  }, [gameState.coins, bubbles, currentLevel]);
 
   // Hint: Solve all (18 coins)
   const onHintSolveAll = useCallback(() => {
@@ -541,12 +593,21 @@ export const useGameState = () => {
     }
 
     setHintsUsedInLevel(true);
+    hintsUsedRef.current = true;
 
-    // Deduct coins first
-    setGameState((prev) => ({
-      ...prev,
-      coins: prev.coins - HINT_COST_SOLVE_ALL,
-    }));
+    // Deduct coins and persist hints used for this level
+    if (currentLevel) {
+      setGameState((prev) => ({
+        ...prev,
+        coins: prev.coins - HINT_COST_SOLVE_ALL,
+        hintsUsedByLevel: { ...prev.hintsUsedByLevel, [currentLevel.id]: true },
+      }));
+    } else {
+      setGameState((prev) => ({
+        ...prev,
+        coins: prev.coins - HINT_COST_SOLVE_ALL,
+      }));
+    }
 
     // Fill all slots with correct letters
     const newSlots = [...slots];
@@ -763,7 +824,7 @@ export const useGameState = () => {
     goHome,
 
     // Computed
-    hasFilledSlots: inputHistory.length > 0,
+    hasFilledSlots: inputHistory.some(h => !h.isHint),
     hasFakeBubbles,
   };
 };
