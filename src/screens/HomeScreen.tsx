@@ -1,6 +1,7 @@
 import React from "react";
 import { Music, Play, RotateCcw, LayoutGrid, RefreshCw } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
+import { SettingsDialog } from "@/components/SettingsDialog";
 
 interface HomeScreenProps {
   coins: number;
@@ -9,6 +10,7 @@ interface HomeScreenProps {
   onContinue: () => void;
   onRestart: () => void;
   onLevels: () => void;
+  onFullReset: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -18,6 +20,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onContinue,
   onRestart,
   onLevels,
+  onFullReset,
 }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
@@ -28,8 +31,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-primary/5 rounded-full blur-2xl" />
       </div>
 
-      {/* Coins HUD - top */}
-      <div className="absolute top-6 left-6 safe-area-top">
+      {/* Settings & Coins HUD - top */}
+      <div className="absolute top-6 left-6 safe-area-top flex items-center gap-3">
+        <SettingsDialog onFullReset={onFullReset} />
         <CoinDisplay coins={coins} />
       </div>
 

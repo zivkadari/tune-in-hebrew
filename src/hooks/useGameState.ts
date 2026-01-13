@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Level, levels, getStageNumber, isLastSongInStage } from "@/data/levels";
+import { toast } from "sonner";
 
 // Hebrew letters including final forms
 const HEBREW_LETTERS = "אבגדהוזחטיכלמנסעפצקרשתךםןףץ";
@@ -849,6 +850,40 @@ export const useGameState = () => {
   // Check if there are visible fake bubbles
   const hasFakeBubbles = bubbles.some(b => b.isFake && !b.used);
 
+  // Full reset function - clears all game data
+  const fullReset = useCallback(() => {
+    // 1. Clear main game state
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // 2. Clear new game notice preference
+    localStorage.removeItem(HIDE_NOTICE_KEY);
+    
+    // 3. Clear all level progress
+    levels.forEach((level) => {
+      localStorage.removeItem(`${LEVEL_PROGRESS_KEY}-${level.id}`);
+    });
+    
+    // 4. Reset state to initial values
+    const initialState: GameState = {
+      coins: 0,
+      currentLevelId: 1,
+      completedLevelIds: [],
+      hintsUsedByLevel: {},
+    };
+    setGameState(initialState);
+    setScreen("home");
+    setHintsUsedInLevel(false);
+    setCurrentLevel(null);
+    setSlots([]);
+    setBubbles([]);
+    setInputHistory([]);
+    setMessage("");
+    setMessageType("warning");
+    
+    // 5. Show success toast
+    toast.success("המשחק אופס בהצלחה. מתחילים מחדש! 🎮");
+  }, []);
+
   return {
     // State
     screen,
@@ -894,6 +929,7 @@ export const useGameState = () => {
     openLevelsScreen,
     selectLevel,
     goHome,
+    fullReset,
 
     // Computed
     hasFilledSlots: inputHistory.some(h => !h.isHint),

@@ -42,6 +42,7 @@ const Index = () => {
     openLevelsScreen,
     selectLevel,
     goHome,
+    fullReset,
     hasFilledSlots,
     hasFakeBubbles,
   } = useGameState();
@@ -56,6 +57,7 @@ const Index = () => {
           onContinue={continueGame}
           onRestart={restartGame}
           onLevels={openLevelsScreen}
+          onFullReset={fullReset}
         />
         <NewGameNoticeDialog
           open={showNewGameNotice}
