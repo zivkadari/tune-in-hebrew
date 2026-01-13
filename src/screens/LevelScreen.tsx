@@ -113,16 +113,31 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
                 style={{ width: `${audioProgress}%` }}
               />
             </div>
-            {/* Question type label */}
-            <div className="text-center text-muted-foreground text-sm mt-3">
-              {questionType === "song" ? "שם השיר" : "שם האמן"}
-            </div>
           </div>
         </div>
 
         {/* Play button */}
         <div className="flex flex-col items-center gap-3">
           <PlayButton isPlaying={isPlaying} onPlay={onPlay} />
+        </div>
+
+        {/* Task header - above letter slots */}
+        <div className="w-full max-w-[520px] text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+            <span className="text-lg">
+              {questionType === "artist" ? "🎤" : "🎵"}
+            </span>
+            <span className="text-lg font-bold text-foreground">
+              {questionType === "artist" ? "נחש/י את האמן" : "נחש/י את שם השיר"}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              questionType === "artist" 
+                ? "bg-purple-500/20 text-purple-300" 
+                : "bg-primary/20 text-primary"
+            }`}>
+              {questionType === "artist" ? "אמן" : "שיר"}
+            </span>
+          </div>
         </div>
 
         {/* Letter slots */}
