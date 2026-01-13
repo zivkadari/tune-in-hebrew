@@ -42,6 +42,35 @@ interface GameState {
 
 const STORAGE_KEY = "guess-the-song-state";
 const HIDE_NOTICE_KEY = "hide-new-game-notice";
+const LEVEL_PROGRESS_KEY = "level-progress";
+
+interface LevelProgress {
+  slots: Slot[];
+  bubbles: Bubble[];
+  inputHistory: HistoryItem[];
+}
+
+const saveLevelProgress = (levelId: number, progress: LevelProgress) => {
+  try {
+    localStorage.setItem(`${LEVEL_PROGRESS_KEY}-${levelId}`, JSON.stringify(progress));
+  } catch (e) {
+    console.error("Failed to save level progress:", e);
+  }
+};
+
+const loadLevelProgress = (levelId: number): LevelProgress | null => {
+  try {
+    const saved = localStorage.getItem(`${LEVEL_PROGRESS_KEY}-${levelId}`);
+    return saved ? JSON.parse(saved) : null;
+  } catch (e) {
+    console.error("Failed to load level progress:", e);
+    return null;
+  }
+};
+
+const clearLevelProgress = (levelId: number) => {
+  localStorage.removeItem(`${LEVEL_PROGRESS_KEY}-${levelId}`);
+};
 
 const loadGameState = (): GameState => {
   try {
@@ -158,7 +187,6 @@ export const useGameState = () => {
     setCurrentLevel(level);
     setMessage(null);
     setMessageType(null);
-    setInputHistory([]);
     setShowSuccess(false);
     // Load hints used state from persisted game state
     const savedState = loadGameState();
@@ -167,52 +195,74 @@ export const useGameState = () => {
     hintsUsedRef.current = levelHintsUsed;
     setIsFirstTimeCompletion(false);
 
-    // Create slots from title
-    const newSlots: Slot[] = [];
-    let answerIdx = 0;
-    const lettersOnly: string[] = [];
-
-    for (const char of level.title) {
-      if (isHebrewLetter(char)) {
-        newSlots.push({
-          type: "letter",
-          answerIndex: answerIdx,
-          value: null,
-        });
-        lettersOnly.push(char);
-        answerIdx++;
-      } else {
-        newSlots.push({
-          type: "fixed",
-          char,
-          value: char,
-        });
+    // Try to load saved level progress first
+    const savedProgress = loadLevelProgress(levelId);
+    
+    if (savedProgress) {
+      // Restore saved progress
+      setSlots(savedProgress.slots);
+      setBubbles(savedProgress.bubbles);
+      setInputHistory(savedProgress.inputHistory);
+      
+      // Calculate answer letters from level title
+      const lettersOnly: string[] = [];
+      for (const char of level.title) {
+        if (isHebrewLetter(char)) {
+          lettersOnly.push(char);
+        }
       }
+      setAnswerLetters(lettersOnly.join(""));
+    } else {
+      // Create fresh slots and bubbles
+      setInputHistory([]);
+      
+      // Create slots from title
+      const newSlots: Slot[] = [];
+      let answerIdx = 0;
+      const lettersOnly: string[] = [];
+
+      for (const char of level.title) {
+        if (isHebrewLetter(char)) {
+          newSlots.push({
+            type: "letter",
+            answerIndex: answerIdx,
+            value: null,
+          });
+          lettersOnly.push(char);
+          answerIdx++;
+        } else {
+          newSlots.push({
+            type: "fixed",
+            char,
+            value: char,
+          });
+        }
+      }
+
+      setSlots(newSlots);
+      setAnswerLetters(lettersOnly.join(""));
+
+      // Create bubbles with real letters + fake letters (always TOTAL_BUBBLES = 14)
+      const realBubbles: Bubble[] = lettersOnly.map((letter, idx) => ({
+        id: `real-${idx}`,
+        letter,
+        isFake: false,
+        used: false,
+      }));
+
+      // Calculate fake letters needed to reach TOTAL_BUBBLES
+      const fakeCount = Math.max(0, TOTAL_BUBBLES - lettersOnly.length);
+
+      const fakeBubbles: Bubble[] = Array.from({ length: fakeCount }, (_, idx) => ({
+        id: `fake-${idx}`,
+        letter: getRandomFakeLetter(),
+        isFake: true,
+        used: false,
+      }));
+
+      const allBubbles = shuffleArray([...realBubbles, ...fakeBubbles]);
+      setBubbles(allBubbles);
     }
-
-    setSlots(newSlots);
-    setAnswerLetters(lettersOnly.join(""));
-
-    // Create bubbles with real letters + fake letters (always TOTAL_BUBBLES = 14)
-    const realBubbles: Bubble[] = lettersOnly.map((letter, idx) => ({
-      id: `real-${idx}`,
-      letter,
-      isFake: false,
-      used: false,
-    }));
-
-    // Calculate fake letters needed to reach TOTAL_BUBBLES
-    const fakeCount = Math.max(0, TOTAL_BUBBLES - lettersOnly.length);
-
-    const fakeBubbles: Bubble[] = Array.from({ length: fakeCount }, (_, idx) => ({
-      id: `fake-${idx}`,
-      letter: getRandomFakeLetter(),
-      isFake: true,
-      used: false,
-    }));
-
-    const allBubbles = shuffleArray([...realBubbles, ...fakeBubbles]);
-    setBubbles(allBubbles);
 
     setScreen("level");
   }, []);
@@ -273,6 +323,9 @@ export const useGameState = () => {
     const baseReward = wasFirstTime ? REWARD_BASE : 0;
     const noHintBonus = wasFirstTime && !usedHints ? REWARD_NO_HINTS_BONUS : 0;
     const totalReward = baseReward + noHintBonus;
+
+    // Clear saved level progress on completion
+    clearLevelProgress(levelId);
 
     setGameState((prev) => ({
       ...prev,
@@ -526,12 +579,23 @@ export const useGameState = () => {
       newSlots[randomSlotIdx] = { ...slot, value: correctLetter };
       newBubbles[bubbleIndex] = { ...newBubbles[bubbleIndex], used: true };
 
+      const newHistory = [
+        ...inputHistory,
+        { slotAnswerIndex: slot.answerIndex!, bubbleId: newBubbles[bubbleIndex].id, isHint: true },
+      ];
+
       setSlots(newSlots);
       setBubbles(newBubbles);
-      setInputHistory((prev) => [
-        ...prev,
-        { slotAnswerIndex: slot.answerIndex!, bubbleId: newBubbles[bubbleIndex].id, isHint: true },
-      ]);
+      setInputHistory(newHistory);
+
+      // Save level progress after hint
+      if (currentLevel) {
+        saveLevelProgress(currentLevel.id, {
+          slots: newSlots,
+          bubbles: newBubbles,
+          inputHistory: newHistory,
+        });
+      }
     }
 
     setGameState((prev) => ({
@@ -540,7 +604,7 @@ export const useGameState = () => {
     }));
     setMessage(null);
     setMessageType(null);
-  }, [gameState.coins, slots, bubbles, answerLetters, currentLevel]);
+  }, [gameState.coins, slots, bubbles, answerLetters, inputHistory, currentLevel]);
 
   // Hint: Remove fake letters (7 coins)
   const onHintRemoveFakes = useCallback(() => {
@@ -576,13 +640,21 @@ export const useGameState = () => {
     }
 
     // Mark all fake bubbles as used (hide them)
-    setBubbles((prev) =>
-      prev.map((b) => (b.isFake && !b.used ? { ...b, used: true } : b))
-    );
+    const newBubbles = bubbles.map((b) => (b.isFake && !b.used ? { ...b, used: true } : b));
+    setBubbles(newBubbles);
+
+    // Save level progress after hint
+    if (currentLevel) {
+      saveLevelProgress(currentLevel.id, {
+        slots,
+        bubbles: newBubbles,
+        inputHistory,
+      });
+    }
 
     setMessage("האותיות המיותרות הוסרו!");
     setMessageType("success");
-  }, [gameState.coins, bubbles, currentLevel]);
+  }, [gameState.coins, bubbles, slots, inputHistory, currentLevel]);
 
   // Hint: Solve all (18 coins)
   const onHintSolveAll = useCallback(() => {
