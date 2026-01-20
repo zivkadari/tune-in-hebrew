@@ -16,6 +16,8 @@ import { GroupDetailScreen } from "@/screens/GroupDetailScreen";
 import { EnhancedLeaderboardScreen } from "@/screens/EnhancedLeaderboardScreen";
 import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
 import { WelcomeNameDialog } from "@/components/WelcomeNameDialog";
+import { TutorialOfferDialog } from "@/components/TutorialOfferDialog";
+import { TutorialScreen } from "@/screens/TutorialScreen";
 import type { DailyScreen } from "@/types/dailyTimeAttack";
 import { 
   getPlayerId, 
@@ -25,6 +27,7 @@ import {
   isFirstTimePlayer,
   markPlayerAsReturning 
 } from "@/lib/playerStorage";
+import { hasTutorialCompleted, markTutorialCompleted } from "@/lib/tutorialStorage";
 
 const Index = () => {
   // Campaign mode state
@@ -73,6 +76,8 @@ const Index = () => {
   const [dailyScreen, setDailyScreen] = useState<DailyScreen | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showPracticeWarning, setShowPracticeWarning] = useState(false);
+  const [showTutorialOffer, setShowTutorialOffer] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   
   const daily = useDailyTimeAttack();
 
@@ -141,6 +146,30 @@ const Index = () => {
 
   // Handle entering Daily Time Attack mode
   const handleOpenTimeAttack = useCallback(() => {
+    if (!hasTutorialCompleted()) {
+      setShowTutorialOffer(true);
+    } else {
+      setDailyScreen('daily-home');
+      daily.initialize();
+    }
+  }, [daily]);
+
+  // Handle tutorial responses
+  const handleTutorialAccept = useCallback(() => {
+    setShowTutorialOffer(false);
+    setShowTutorial(true);
+  }, []);
+
+  const handleTutorialDecline = useCallback(() => {
+    setShowTutorialOffer(false);
+    markTutorialCompleted();
+    setDailyScreen('daily-home');
+    daily.initialize();
+  }, [daily]);
+
+  const handleTutorialComplete = useCallback(() => {
+    markTutorialCompleted();
+    setShowTutorial(false);
     setDailyScreen('daily-home');
     daily.initialize();
   }, [daily]);
@@ -188,6 +217,16 @@ const Index = () => {
   }, [daily.runResult, dailyScreen]);
 
   // Daily Time Attack screens
+  // Show tutorial screen
+  if (showTutorial) {
+    return (
+      <TutorialScreen
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialComplete}
+      />
+    );
+  }
+
   // Handle showing leaderboard
   const handleShowLeaderboard = useCallback(async () => {
     await daily.fetchLeaderboard();
@@ -315,6 +354,11 @@ const Index = () => {
           open={showWelcomeDialog}
           defaultName={welcomeName}
           onSave={handleWelcomeSaveName}
+        />
+        <TutorialOfferDialog
+          open={showTutorialOffer}
+          onAccept={handleTutorialAccept}
+          onDecline={handleTutorialDecline}
         />
       </>
     );
