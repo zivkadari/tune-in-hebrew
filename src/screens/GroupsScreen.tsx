@@ -20,120 +20,112 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
   const [joinCode, setJoinCode] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const playerId = getPlayerId();
-
   useEffect(() => {
     fetchMyGroups();
   }, []);
 
   const fetchMyGroups = async () => {
-    let pid = playerId;
-    
-    // If no player ID, try to create one
-    if (!pid) {
-      pid = await getOrCreatePlayerId();
-    }
-    
-    if (!pid) {
-      toast.error('שגיאה ביצירת משתמש');
-      setIsLoading(false);
-      return;
-    }
-    
     setIsLoading(true);
     
-    // Use secure edge function to fetch groups
-    const { data, error } = await supabase.functions.invoke('get-my-groups', {
-      headers: {
-        'x-player-id': pid,
-      },
-    });
-    
-    if (error) {
-      console.error('Error fetching groups:', error);
-      toast.error('שגיאה בטעינת הקבוצות');
-    } else if (data?.error) {
-      // If player not found, try to create and retry
-      if (data.error === 'Player not found') {
-        const newPid = await getOrCreatePlayerId();
-        if (newPid) {
-          setIsLoading(false);
-          return fetchMyGroups(); // Retry
-        }
+    try {
+      // Ensure player exists (this also handles anonymous auth)
+      await getOrCreatePlayerId();
+      
+      // Use secure edge function to fetch groups (uses JWT auth)
+      const { data, error } = await supabase.functions.invoke('get-my-groups');
+      
+      if (error) {
+        console.error('Error fetching groups:', error);
+        toast.error('שגיאה בטעינת הקבוצות');
+      } else if (data?.error) {
+        console.error('Error fetching groups:', data.error);
+        toast.error('שגיאה בטעינת הקבוצות');
+      } else {
+        setGroups(data?.groups || []);
       }
-      console.error('Error fetching groups:', data.error);
+    } catch (err) {
+      console.error('Error fetching groups:', err);
       toast.error('שגיאה בטעינת הקבוצות');
-    } else {
-      setGroups(data?.groups || []);
     }
+    
     setIsLoading(false);
   };
 
   const createGroup = async () => {
-    if (!playerId || !newGroupName.trim()) return;
+    if (!newGroupName.trim()) {
+      toast.error('יש להזין שם קבוצה');
+      return;
+    }
     
-    // Use secure edge function to create group
-    const { data, error } = await supabase.functions.invoke('create-group', {
-      body: { name: newGroupName.trim() },
-      headers: {
-        'x-player-id': playerId,
-      },
-    });
-    
-    if (error) {
-      console.error('Error creating group:', error);
+    try {
+      // Use secure edge function to create group (uses JWT auth)
+      const { data, error } = await supabase.functions.invoke('create-group', {
+        body: { name: newGroupName.trim() },
+      });
+      
+      if (error) {
+        console.error('Error creating group:', error);
+        toast.error('שגיאה ביצירת קבוצה');
+        return;
+      }
+      
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      
+      if (data?.warning) {
+        toast.warning('הקבוצה נוצרה אך לא הצלחת להצטרף אוטומטית');
+      } else {
+        toast.success('הקבוצה נוצרה! 🎉');
+      }
+      
+      setNewGroupName('');
+      setShowCreateForm(false);
+      fetchMyGroups();
+    } catch (err) {
+      console.error('Error creating group:', err);
       toast.error('שגיאה ביצירת קבוצה');
-      return;
     }
-    
-    if (data?.error) {
-      toast.error(data.error);
-      return;
-    }
-    
-    if (data?.warning) {
-      toast.warning('הקבוצה נוצרה אך לא הצלחת להצטרף אוטומטית');
-    } else {
-      toast.success('הקבוצה נוצרה! 🎉');
-    }
-    
-    setNewGroupName('');
-    setShowCreateForm(false);
-    fetchMyGroups();
   };
 
   const joinGroup = async () => {
-    if (!playerId || !joinCode.trim()) return;
-    
-    // Use edge function to join group (validates player ownership)
-    const { data, error } = await supabase.functions.invoke('join-group', {
-      body: { join_code: joinCode.trim() },
-      headers: {
-        'x-player-id': playerId,
-      },
-    });
-    
-    if (error) {
-      console.error('Error joining group:', error);
-      toast.error('שגיאה בהצטרפות');
+    if (!joinCode.trim()) {
+      toast.error('יש להזין קוד קבוצה');
       return;
     }
     
-    if (data?.error) {
-      if (data.error.includes('Already a member')) {
-        toast.error('כבר בקבוצה הזו');
-      } else if (data.error.includes('not found')) {
-        toast.error('קוד קבוצה לא נמצא');
-      } else {
-        toast.error(data.error);
+    try {
+      // Use edge function to join group (uses JWT auth)
+      const { data, error } = await supabase.functions.invoke('join-group', {
+        body: { join_code: joinCode.trim() },
+      });
+      
+      if (error) {
+        console.error('Error joining group:', error);
+        toast.error('שגיאה בהצטרפות');
+        return;
       }
-      return;
+      
+      if (data?.error) {
+        if (data.error.includes('Already a member')) {
+          toast.error('כבר בקבוצה הזו');
+        } else if (data.error.includes('not found')) {
+          toast.error('קוד קבוצה לא נמצא');
+        } else {
+          toast.error(data.error);
+        }
+        return;
+      }
+      
+      toast.success(`הצטרפת לקבוצה "${data.group?.name}"! 🎉`);
+      setJoinCode('');
+      setShowJoinForm(false);
+      fetchMyGroups();
+    } catch (err) {
+      console.error('Error joining group:', err);
+      toast.error('שגיאה בהצטרפות');
     }
-    
-    toast.success(`הצטרפת לקבוצה "${data.group?.name}"! 🎉`);
-    setJoinCode('');
-    setShowJoinForm(false);
-    fetchMyGroups();
   };
 
   const copyCode = (code: string) => {

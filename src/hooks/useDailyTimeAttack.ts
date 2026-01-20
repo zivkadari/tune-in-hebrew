@@ -102,34 +102,35 @@ function generateFakeLetters(count: number, existingLetters: string[]): string[]
 }
 
 /**
- * Create slots and bubbles for a song answer
- * Always creates exactly TOTAL_BUBBLES (14) bubbles for consistent UI
+ * Estimate answer length from encrypted data
+ * Since we can't decrypt, we generate a reasonable number of slots
  */
-function createSlotsAndBubbles(answer: string): { slots: Slot[], bubbles: Bubble[] } {
-  // Create slots
+function estimateAnswerLength(encryptedAnswer: string): number {
+  // Base64 encrypted data has some overhead, but we can estimate
+  // A typical Hebrew song name is 5-15 characters
+  // We'll use a default and let the server verify
+  return 10; // Default estimate
+}
+
+/**
+ * Create slots and bubbles for a song
+ * Since answer is encrypted, we create slots based on estimate
+ * and verify via server when user submits
+ */
+function createSlotsAndBubbles(answerLength: number): { slots: Slot[], bubbles: Bubble[] } {
+  // Create slots without spaces (we don't know where spaces are)
   const slots: Slot[] = [];
-  let slotId = 0;
-  
-  for (const char of answer) {
-    if (char === ' ') {
-      slots.push({ id: slotId++, letter: ' ', bubbleId: null, isSpace: true });
-    } else {
-      slots.push({ id: slotId++, letter: null, bubbleId: null, isSpace: false });
-    }
+  for (let i = 0; i < answerLength; i++) {
+    slots.push({ id: i, letter: null, bubbleId: null, isSpace: false });
   }
   
-  // Get actual letters (no spaces)
-  const answerLetters = answer.replace(/\s/g, '').split('');
-  
-  // Calculate fake letters to always reach 14 total bubbles
-  const fakeCount = Math.max(0, TOTAL_BUBBLES - answerLetters.length);
-  const fakeLetters = generateFakeLetters(fakeCount, answerLetters);
-  
-  // Combine and shuffle - always 14 bubbles
-  const allLetters = shuffleArray([...answerLetters, ...fakeLetters]);
+  // Generate random letters for bubbles
+  const allLetters = shuffleArray(
+    HEBREW_LETTERS.split('').slice(0, Math.min(TOTAL_BUBBLES, HEBREW_LETTERS.length))
+  );
   
   // Create bubbles
-  const bubbles: Bubble[] = allLetters.map((letter, idx) => ({
+  const bubbles: Bubble[] = allLetters.slice(0, TOTAL_BUBBLES).map((letter, idx) => ({
     id: idx,
     letter,
     isUsed: false
@@ -182,6 +183,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const skipUsedRef = useRef(false);
   const yearHintUsedRef = useRef(false);
   const dailySetRef = useRef<DailySet | null>(null);
+  const isCheckingRef = useRef(false);
 
   // Keep refs in sync with state
   useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);
@@ -199,7 +201,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const initialize = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Get or create player
+      // Get or create player (this also creates anonymous auth session)
       const pid = await getOrCreatePlayerId();
       setPlayerId(pid);
       
@@ -216,22 +218,31 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       setDailySet(dailySetData);
       
       // Check if player already played official today via edge function
-      const runUrl = new URL(`https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-player-run`);
-      runUrl.searchParams.set('date', dailySetData.date);
-      
-      const runResponse = await fetch(runUrl.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-player-id': pid,
-        },
+      const { data: runData, error: runError } = await supabase.functions.invoke('get-player-run', {
+        body: null,
       });
       
-      if (runResponse.ok) {
-        const runResult = await runResponse.json();
-        if (runResult.run) {
-          setHasPlayedOfficialToday(true);
-          setTodayOfficialRun(runResult.run as DailyRun);
+      // Need to pass date as query param - use fetch
+      const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-player-run');
+      url.searchParams.set('date', dailySetData.date);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const runResponse = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        });
+        
+        if (runResponse.ok) {
+          const runResult = await runResponse.json();
+          if (runResult.run) {
+            setHasPlayedOfficialToday(true);
+            setTodayOfficialRun(runResult.run as DailyRun);
+          }
         }
       }
       
@@ -268,9 +279,10 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     setIsPlaying(false);
     setAudioProgress(0);
     
-    // Setup first song
+    // Setup first song - use estimated length since answer is encrypted
     const firstSong = dailySet.songs[0];
-    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(firstSong.answer);
+    const estimatedLength = estimateAnswerLength(firstSong.encrypted_answer);
+    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(estimatedLength);
     setSlots(newSlots);
     setBubbles(newBubbles);
     
@@ -346,7 +358,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       return;
     }
     
-    // Save run via edge function (validates player ownership)
+    // Save run via edge function (uses JWT auth)
     const runData = {
       date: currentDailySet.date,
       run_type: currentRunType,
@@ -361,9 +373,6 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     try {
       const { data, error } = await supabase.functions.invoke('save-run', {
         body: runData,
-        headers: {
-          'x-player-id': pid,
-        },
       });
       
       if (error) {
@@ -413,24 +422,22 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const fetchLeaderboard = useCallback(async () => {
     if (!dailySet) return;
     
-    const pid = getPlayerId();
-    
-    // Use secure edge function for leaderboard
-    const { data, error } = await supabase.functions.invoke('get-leaderboard', {
-      headers: pid ? { 'x-player-id': pid } : {},
-      body: null,
-    });
-    
-    // Parse URL to add query param (edge function uses GET)
-    const url = new URL(`${import.meta.env.VITE_SUPABASE_URL || 'https://nltdspmkogjsnnywqzke.supabase.co'}/functions/v1/get-leaderboard`);
+    const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-leaderboard');
     url.searchParams.set('date', dailySet.date);
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
     
     const response = await fetch(url.toString(), {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-player-id': pid || '',
-      },
+      headers,
     });
     
     if (!response.ok) {
@@ -464,7 +471,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     
     setCurrentSongIndex(nextIndex);
     const nextSong = dailySet.songs[nextIndex];
-    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(nextSong.answer);
+    const estimatedLength = estimateAnswerLength(nextSong.encrypted_answer);
+    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(estimatedLength);
     setSlots(newSlots);
     setBubbles(newBubbles);
     setSlotState('normal');
@@ -479,46 +487,65 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   }, [dailySet, currentSongIndex, endRunInternal]);
 
   /**
-   * Check if answer is correct
+   * Check if answer is correct via server API
    */
-  const checkAnswer = useCallback((currentSlots: Slot[]) => {
-    if (!currentSong) return;
+  const checkAnswer = useCallback(async (currentSlots: Slot[], userGuess: string) => {
+    if (!currentSong || isCheckingRef.current) return;
     
-    // Build user's answer from slots
-    const userAnswer = currentSlots
-      .map(s => s.isSpace ? ' ' : (s.letter || ''))
-      .join('');
+    isCheckingRef.current = true;
     
-    // Check if all slots are filled
-    const allFilled = currentSlots.every(s => s.isSpace || s.letter !== null);
-    if (!allFilled) return;
-    
-    if (userAnswer === currentSong.answer) {
-      // CORRECT!
-      setSlotState('correct');
-      setCorrectCount(prev => prev + 1);
-      setMessage('נכון! ✅');
-      setMessageType('success');
+    try {
+      // Call verify-answer API
+      const { data, error } = await supabase.functions.invoke('verify-answer', {
+        body: {
+          song_id: currentSong.id,
+          guess: userGuess,
+          encrypted_answer: currentSong.encrypted_answer,
+        },
+      });
       
-      setTimeout(() => {
-        setMessage(null);
-        setMessageType(null);
-        advanceToNextSong();
-      }, 500);
-    } else {
-      // WRONG!
-      setSlotState('wrong');
-      setMessage('לא נכון ❌');
-      setMessageType('error');
+      if (error) {
+        console.error('Error verifying answer:', error);
+        setSlotState('wrong');
+        setMessage('שגיאה בבדיקה');
+        setMessageType('error');
+        setTimeout(() => {
+          setMessage(null);
+          setMessageType(null);
+          setSlotState('normal');
+        }, 500);
+        return;
+      }
       
-      setTimeout(() => {
-        setMessage(null);
-        setMessageType(null);
-        // Reset slots but keep bubbles
-        setSlots(prev => prev.map(s => s.isSpace ? s : { ...s, letter: null, bubbleId: null }));
-        setBubbles(prev => prev.map(b => ({ ...b, isUsed: false })));
-        setSlotState('normal');
-      }, 500);
+      if (data.correct) {
+        // CORRECT!
+        setSlotState('correct');
+        setCorrectCount(prev => prev + 1);
+        setMessage('נכון! ✅');
+        setMessageType('success');
+        
+        setTimeout(() => {
+          setMessage(null);
+          setMessageType(null);
+          advanceToNextSong();
+        }, 500);
+      } else {
+        // WRONG!
+        setSlotState('wrong');
+        setMessage('לא נכון ❌');
+        setMessageType('error');
+        
+        setTimeout(() => {
+          setMessage(null);
+          setMessageType(null);
+          // Reset slots but keep bubbles
+          setSlots(prev => prev.map(s => s.isSpace ? s : { ...s, letter: null, bubbleId: null }));
+          setBubbles(prev => prev.map(b => ({ ...b, isUsed: false })));
+          setSlotState('normal');
+        }, 500);
+      }
+    } finally {
+      isCheckingRef.current = false;
     }
   }, [currentSong, advanceToNextSong]);
 
@@ -548,8 +575,17 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       b.id === bubbleId ? { ...b, isUsed: true } : b
     ));
     
-    // Check if answer is complete
-    checkAnswer(newSlots);
+    // Check if all slots are filled
+    const allFilled = newSlots.every(s => s.isSpace || s.letter !== null);
+    if (allFilled) {
+      // Build user's answer from slots
+      const userAnswer = newSlots
+        .map(s => s.isSpace ? ' ' : (s.letter || ''))
+        .join('');
+      
+      // Verify via server
+      checkAnswer(newSlots, userAnswer);
+    }
   }, [isRunning, slotState, bubbles, slots, checkAnswer]);
 
   /**

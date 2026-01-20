@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useGameState } from "@/hooks/useGameState";
 import { useDailyTimeAttack } from "@/hooks/useDailyTimeAttack";
 import { HomeScreen } from "@/screens/HomeScreen";
@@ -75,6 +76,28 @@ const Index = () => {
   // Welcome dialog state for first-time players
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+
+  // Initialize anonymous auth on app mount
+  useEffect(() => {
+    const initAuth = async () => {
+      // Check for existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Create anonymous session on first visit
+        await supabase.auth.signInAnonymously();
+      }
+    };
+    
+    initAuth();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Check if this is a first-time player on mount
   useEffect(() => {

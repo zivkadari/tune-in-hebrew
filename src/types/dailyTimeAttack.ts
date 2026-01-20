@@ -1,7 +1,7 @@
 export interface DailySong {
   id: number;
   type: 'song' | 'artist';
-  answer: string;
+  encrypted_answer: string; // Server-encrypted answer - client cannot decrypt
   audio_url: string;
   release_year: number;
 }
