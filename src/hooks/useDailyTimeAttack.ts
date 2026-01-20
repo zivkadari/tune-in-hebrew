@@ -189,20 +189,27 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
         return;
       }
       
-      setDailySet(data as DailySet);
+      const dailySetData = data as DailySet;
+      setDailySet(dailySetData);
       
-      // Check if player already played official today
-      const { data: existingRun } = await supabase
-        .from('daily_time_attack_runs')
-        .select('*')
-        .eq('player_id', pid)
-        .eq('date', data.date)
-        .eq('run_type', 'official')
-        .single();
+      // Check if player already played official today via edge function
+      const runUrl = new URL(`https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-player-run`);
+      runUrl.searchParams.set('date', dailySetData.date);
       
-      if (existingRun) {
-        setHasPlayedOfficialToday(true);
-        setTodayOfficialRun(existingRun as DailyRun);
+      const runResponse = await fetch(runUrl.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-player-id': pid,
+        },
+      });
+      
+      if (runResponse.ok) {
+        const runResult = await runResponse.json();
+        if (runResult.run) {
+          setHasPlayedOfficialToday(true);
+          setTodayOfficialRun(runResult.run as DailyRun);
+        }
       }
       
     } catch (err) {

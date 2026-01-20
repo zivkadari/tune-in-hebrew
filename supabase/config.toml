@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.get-leaderboard]
 verify_jwt = false
+
+[functions.get-player-run]
+verify_jwt = false
