@@ -82,20 +82,27 @@ export const getPlayerName = async (): Promise<string> => {
 };
 
 /**
- * Update the player's display name
+ * Update the player's display name via secure edge function
+ * The edge function validates player ownership before updating
  */
 export const updatePlayerName = async (newName: string): Promise<void> => {
   const playerId = getPlayerId();
   if (!playerId) throw new Error('No player ID found');
   
-  const { error } = await supabase
-    .from('players')
-    .update({ display_name: newName })
-    .eq('id', playerId);
+  const { data, error } = await supabase.functions.invoke('update-player-name', {
+    body: { display_name: newName },
+    headers: {
+      'x-player-id': playerId,
+    },
+  });
   
   if (error) {
     console.error('Error updating player name:', error);
     throw error;
+  }
+  
+  if (data?.error) {
+    throw new Error(data.error);
   }
   
   localStorage.setItem(PLAYER_NAME_KEY, newName);
