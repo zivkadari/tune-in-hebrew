@@ -9,6 +9,7 @@ import { NewGameNoticeDialog } from "@/components/NewGameNoticeDialog";
 import { DailyTimeAttackHome } from "@/screens/DailyTimeAttackHome";
 import { DailyTimeAttackRun } from "@/screens/DailyTimeAttackRun";
 import { DailyTimeAttackResults } from "@/screens/DailyTimeAttackResults";
+import { DailyLeaderboardScreen } from "@/screens/DailyLeaderboardScreen";
 import { GroupsScreen } from "@/screens/GroupsScreen";
 import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
 import type { DailyScreen } from "@/types/dailyTimeAttack";
@@ -111,18 +112,32 @@ const Index = () => {
   }, [daily.runResult, dailyScreen]);
 
   // Daily Time Attack screens
+  // Handle showing leaderboard
+  const handleShowLeaderboard = useCallback(async () => {
+    await daily.fetchLeaderboard();
+    setDailyScreen('leaderboard');
+  }, [daily]);
+
   if (dailyScreen === 'daily-home') {
     return (
       <DailyTimeAttackHome
         isLoading={daily.isLoading}
         hasPlayedOfficialToday={daily.hasPlayedOfficialToday}
         onStartRun={handleStartDailyRun}
-        onLeaderboard={() => {
-          // For now, just show a toast - could expand to a dedicated screen
-          daily.initialize();
-        }}
+        onLeaderboard={handleShowLeaderboard}
         onGroups={() => setDailyScreen('groups')}
         onBack={handleBackFromDaily}
+      />
+    );
+  }
+
+  if (dailyScreen === 'leaderboard') {
+    return (
+      <DailyLeaderboardScreen
+        isLoading={daily.isLoading}
+        leaderboard={daily.globalLeaderboard}
+        onBack={() => setDailyScreen('daily-home')}
+        onRefresh={() => daily.fetchLeaderboard()}
       />
     );
   }
@@ -142,6 +157,8 @@ const Index = () => {
         slotState={daily.slotState}
         isPlaying={daily.isPlaying}
         activePianoKeys={daily.activePianoKeys}
+        message={daily.message}
+        messageType={daily.messageType}
         onBubbleClick={daily.onBubbleClick}
         onSlotClick={daily.onSlotClick}
         onSkip={daily.useSkip}

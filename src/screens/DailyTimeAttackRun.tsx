@@ -5,8 +5,9 @@ import { Piano } from '@/components/Piano';
 import { PlayButton } from '@/components/PlayButton';
 import { DailyLetterSlots } from '@/components/DailyLetterSlots';
 import { DailyLetterBubbles } from '@/components/DailyLetterBubbles';
+import { MessageDisplay } from '@/components/MessageDisplay';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import type { DailySong, Slot, Bubble, SlotState, RunType } from '@/types/dailyTimeAttack';
+import type { DailySong, Slot, Bubble, SlotState, RunType, MessageType } from '@/types/dailyTimeAttack';
 import { cn } from '@/lib/utils';
 
 interface DailyTimeAttackRunProps {
@@ -22,6 +23,8 @@ interface DailyTimeAttackRunProps {
   slotState: SlotState;
   isPlaying: boolean;
   activePianoKeys: number[];
+  message: string | null;
+  messageType: MessageType;
   onBubbleClick: (bubbleId: number) => void;
   onSlotClick: (slotId: number) => void;
   onSkip: () => void;
@@ -43,6 +46,8 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
   slotState,
   isPlaying,
   activePianoKeys,
+  message,
+  messageType,
   onBubbleClick,
   onSlotClick,
   onSkip,
@@ -112,7 +117,7 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="flex justify-center gap-3 mb-4">
         <button
           onClick={onYearHint}
           disabled={yearHintUsed}
@@ -140,6 +145,11 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
           <SkipForward className="w-4 h-4" />
           <span>דלג ({skipUsed ? '0' : '1'})</span>
         </button>
+      </div>
+
+      {/* Message Display - above bubbles */}
+      <div className="flex justify-center mb-4 min-h-[40px]">
+        <MessageDisplay message={message} type={messageType} />
       </div>
 
       {/* Letter Bubbles */}
