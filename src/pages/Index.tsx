@@ -77,19 +77,42 @@ const Index = () => {
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
-  // Initialize anonymous auth on app mount
+  // Initialize anonymous auth and player on app mount - SEQUENTIAL to avoid race condition
   useEffect(() => {
-    const initAuth = async () => {
-      // Check for existing session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // Create anonymous session on first visit
-        await supabase.auth.signInAnonymously();
+    const initializePlayer = async () => {
+      try {
+        // Step 1: Get or create auth session FIRST
+        let { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log('No session found, creating anonymous session...');
+          const { data, error } = await supabase.auth.signInAnonymously();
+          if (error) {
+            console.error('Error creating anonymous session:', error);
+            return;
+          }
+          session = data.session;
+          console.log('Created anonymous session:', session?.user?.id);
+        } else {
+          console.log('Existing session found:', session.user?.id);
+        }
+        
+        // Step 2: Now that we have a stable session, handle player creation
+        const existingPlayerId = getPlayerId();
+        
+        if (!existingPlayerId || isFirstTimePlayer()) {
+          // Create player if needed (uses current session)
+          await getOrCreatePlayerId();
+          const name = await getPlayerName();
+          setWelcomeName(name);
+          setShowWelcomeDialog(true);
+        }
+      } catch (error) {
+        console.error('Error initializing player:', error);
       }
     };
     
-    initAuth();
+    initializePlayer();
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -97,28 +120,6 @@ const Index = () => {
     });
     
     return () => subscription.unsubscribe();
-  }, []);
-
-  // Check if this is a first-time player on mount
-  useEffect(() => {
-    const checkFirstTimePlayer = async () => {
-      const existingPlayerId = getPlayerId();
-      
-      if (!existingPlayerId) {
-        // New player - create and show welcome dialog
-        await getOrCreatePlayerId();
-        const name = await getPlayerName();
-        setWelcomeName(name);
-        setShowWelcomeDialog(true);
-      } else if (isFirstTimePlayer()) {
-        // Has player ID but never completed welcome flow
-        const name = await getPlayerName();
-        setWelcomeName(name);
-        setShowWelcomeDialog(true);
-      }
-    };
-    
-    checkFirstTimePlayer();
   }, []);
 
   // Handle saving name from welcome dialog

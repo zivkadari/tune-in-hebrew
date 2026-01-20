@@ -57,18 +57,32 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get player by auth_user_id
-    const { data: player, error: playerError } = await supabase
+    let { data: player, error: playerError } = await supabase
       .from("players")
       .select("id")
       .eq("auth_user_id", authUserId)
       .single();
 
+    // If player not found, create one (handles case where session changed)
     if (playerError || !player) {
-      console.error("Player not found for auth user:", authUserId);
-      return new Response(
-        JSON.stringify({ error: "Player not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log("Player not found for auth user, creating new player:", authUserId);
+      
+      const { data: newPlayer, error: insertError } = await supabase
+        .from("players")
+        .insert({ auth_user_id: authUserId })
+        .select("id")
+        .single();
+      
+      if (insertError || !newPlayer) {
+        console.error("Failed to create player:", insertError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create player" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      player = newPlayer;
+      console.log("Created new player:", player.id);
     }
 
     // Parse request body
