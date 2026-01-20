@@ -1,5 +1,5 @@
 import React from "react";
-import { Music, Play, RotateCcw, LayoutGrid, RefreshCw } from "lucide-react";
+import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { SettingsDialog } from "@/components/SettingsDialog";
 
@@ -11,6 +11,7 @@ interface HomeScreenProps {
   onRestart: () => void;
   onLevels: () => void;
   onFullReset: () => void;
+  onTimeAttack: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -21,6 +22,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onRestart,
   onLevels,
   onFullReset,
+  onTimeAttack,
 }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
@@ -106,6 +108,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           >
             <LayoutGrid className="w-5 h-5" />
             <span>שלבים</span>
+          </button>
+
+          <button 
+            onClick={onTimeAttack} 
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all
+                       bg-gradient-to-r from-cyan-500 to-blue-500 text-white
+                       hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/30
+                       active:scale-[0.98]"
+          >
+            <Clock className="w-5 h-5" />
+            <span>⏱️ Time Attack יומי</span>
           </button>
         </div>
       </div>
