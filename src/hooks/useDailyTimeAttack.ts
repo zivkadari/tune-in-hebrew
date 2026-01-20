@@ -510,12 +510,12 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
         setMessage('נכון! ✅');
         setMessageType('success');
         
-        // Reduced delay from 500ms to 250ms for snappier UX
+        // Show message for 500ms so users can see it
         setTimeout(() => {
           setMessage(null);
           setMessageType(null);
           advanceToNextSong();
-        }, 250);
+        }, 500);
       } else {
         // WRONG!
         setSlotState('wrong');
@@ -529,7 +529,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
           setSlots(prev => prev.map(s => s.isSpace ? s : { ...s, letter: null, bubbleId: null }));
           setBubbles(prev => prev.map(b => ({ ...b, isUsed: false })));
           setSlotState('normal');
-        }, 250);
+        }, 500);
       }
     } finally {
       isCheckingRef.current = false;

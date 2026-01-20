@@ -40,7 +40,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </div>
 
       {/* Main card */}
-      <div className="glass-card-glow p-8 sm:p-12 flex flex-col items-center gap-8 max-w-md w-full relative">
+      <div className="glass-card-glow p-8 sm:p-12 flex flex-col items-center gap-8 max-w-md w-full relative mt-16">
         {/* Glowing icon */}
         <div className="relative">
           {/* Glow effect behind icon */}
