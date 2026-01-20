@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Copy, Check, Crown, Trash2, Users, RefreshCw, LogOut } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Crown, Trash2, Users, RefreshCw, LogOut, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDeviceType } from '@/hooks/useDeviceType';
@@ -44,6 +44,8 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
   const [copiedCode, setCopiedCode] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
@@ -148,6 +150,39 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
       toast.error(err.message || 'שגיאה בעזיבת הקבוצה');
     } finally {
       setIsLeaving(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!group) return;
+    
+    setIsDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        toast.error('יש להתחבר');
+        return;
+      }
+      
+      const { data, error } = await supabase.functions.invoke('delete-group', {
+        body: { group_id: group.id }
+      });
+      
+      if (error || data?.error) {
+        console.error('Error deleting group:', error || data?.error);
+        toast.error(data?.error || 'שגיאה במחיקת הקבוצה');
+        return;
+      }
+      
+      toast.success('הקבוצה נמחקה בהצלחה');
+      setShowDeleteConfirm(false);
+      onBack();
+    } catch (err: any) {
+      console.error('Error deleting group:', err);
+      toast.error(err.message || 'שגיאה במחיקת הקבוצה');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -260,6 +295,17 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
         </button>
       )}
 
+      {/* Delete Group Button - only for creators */}
+      {isCreator && (
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="w-full mt-4 p-4 rounded-xl bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-colors flex items-center justify-center gap-3 text-destructive"
+        >
+          <Trash2 className="w-5 h-5" />
+          <span className="font-medium">מחיקת הקבוצה לצמיתות</span>
+        </button>
+      )}
+
       {/* Remove Member Confirmation Dialog */}
       <AlertDialog open={!!memberToRemove} onOpenChange={() => setMemberToRemove(null)}>
         <AlertDialogContent>
@@ -300,7 +346,34 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
             >
               {isLeaving ? 'עוזב...' : 'עזוב'}
             </AlertDialogAction>
-            <AlertDialogCancel disabled={isLeaving}>ביטול</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLeaving}>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Group Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              מחיקת הקבוצה לצמיתות
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך למחוק את הקבוצה "{group?.name}"?
+              <br /><br />
+              <strong className="text-destructive">פעולה זו בלתי הפיכה!</strong> כל החברים יוסרו מהקבוצה והיא תימחק לצמיתות.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction 
+              onClick={handleDeleteGroup}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? 'מוחק...' : 'מחק לצמיתות'}
+            </AlertDialogAction>
+            <AlertDialogCancel disabled={isDeleting}>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
