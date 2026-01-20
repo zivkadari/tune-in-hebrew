@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 const GAME_DURATION_MS = 60000; // 60 seconds
 const SONGS_PER_GAME = 12;
 const COMPLETION_BONUS_MS = 4000; // -4 seconds bonus
+const TOTAL_BUBBLES = 14; // Two rows of 7 bubbles
 
 // Hebrew letters for generating fake letters
 const HEBREW_LETTERS = 'אבגדהוזחטיכלמנסעפצקרשת';
@@ -97,6 +98,7 @@ function generateFakeLetters(count: number, existingLetters: string[]): string[]
 
 /**
  * Create slots and bubbles for a song answer
+ * Always creates exactly TOTAL_BUBBLES (14) bubbles for consistent UI
  */
 function createSlotsAndBubbles(answer: string): { slots: Slot[], bubbles: Bubble[] } {
   // Create slots
@@ -114,11 +116,11 @@ function createSlotsAndBubbles(answer: string): { slots: Slot[], bubbles: Bubble
   // Get actual letters (no spaces)
   const answerLetters = answer.replace(/\s/g, '').split('');
   
-  // Generate some fake letters (3-5 extra)
-  const fakeCount = Math.min(5, Math.max(3, 8 - answerLetters.length));
+  // Calculate fake letters to always reach 14 total bubbles
+  const fakeCount = Math.max(0, TOTAL_BUBBLES - answerLetters.length);
   const fakeLetters = generateFakeLetters(fakeCount, answerLetters);
   
-  // Combine and shuffle
+  // Combine and shuffle - always 14 bubbles
   const allLetters = shuffleArray([...answerLetters, ...fakeLetters]);
   
   // Create bubbles

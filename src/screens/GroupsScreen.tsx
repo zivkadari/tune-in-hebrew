@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Plus, Users, ArrowLeft, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getPlayerId } from '@/lib/playerStorage';
+import { getPlayerId, getOrCreatePlayerId } from '@/lib/playerStorage';
 import { toast } from 'sonner';
 import type { Group } from '@/types/dailyTimeAttack';
 
@@ -25,14 +25,25 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
   }, []);
 
   const fetchMyGroups = async () => {
-    if (!playerId) return;
+    let pid = playerId;
+    
+    // If no player ID, try to create one
+    if (!pid) {
+      pid = await getOrCreatePlayerId();
+    }
+    
+    if (!pid) {
+      toast.error('שגיאה ביצירת משתמש');
+      setIsLoading(false);
+      return;
+    }
     
     setIsLoading(true);
     
     // Use secure edge function to fetch groups
     const { data, error } = await supabase.functions.invoke('get-my-groups', {
       headers: {
-        'x-player-id': playerId,
+        'x-player-id': pid,
       },
     });
     
@@ -40,7 +51,16 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
       console.error('Error fetching groups:', error);
       toast.error('שגיאה בטעינת הקבוצות');
     } else if (data?.error) {
+      // If player not found, try to create and retry
+      if (data.error === 'Player not found') {
+        const newPid = await getOrCreatePlayerId();
+        if (newPid) {
+          setIsLoading(false);
+          return fetchMyGroups(); // Retry
+        }
+      }
       console.error('Error fetching groups:', data.error);
+      toast.error('שגיאה בטעינת הקבוצות');
     } else {
       setGroups(data?.groups || []);
     }
