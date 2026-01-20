@@ -2,6 +2,7 @@ import React from "react";
 import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { useButtonFeedback } from "@/hooks/useButtonFeedback";
 
 interface HomeScreenProps {
   coins: number;
@@ -24,6 +25,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onFullReset,
   onTimeAttack,
 }) => {
+  const { withFeedback } = useButtonFeedback();
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
       {/* Background gradient orbs */}
@@ -76,7 +79,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="flex flex-col gap-4 w-full">
           {isFirstTime ? (
             <button 
-              onClick={onStart} 
+              onClick={withFeedback(onStart)} 
               className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
             >
               <Play className="w-6 h-6" fill="currentColor" />
@@ -85,7 +88,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           ) : (
             <>
               <button 
-                onClick={onContinue} 
+                onClick={withFeedback(onContinue)} 
                 className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
               >
                 <RotateCcw className="w-6 h-6" />
@@ -93,7 +96,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </button>
               
               <button 
-                onClick={onRestart} 
+                onClick={withFeedback(onRestart)} 
                 className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
               >
                 <RefreshCw className="w-5 h-5" />
@@ -103,7 +106,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
 
           <button 
-            onClick={onLevels} 
+            onClick={withFeedback(onLevels)} 
             className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
           >
             <LayoutGrid className="w-5 h-5" />
@@ -111,7 +114,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </button>
 
           <button 
-            onClick={onTimeAttack} 
+            onClick={withFeedback(onTimeAttack)} 
             className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all
                        bg-gradient-to-r from-cyan-500 to-blue-500 text-white
                        hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/30

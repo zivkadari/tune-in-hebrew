@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight, Lock, Check, ChevronDown, ChevronUp, Music } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { Level, SONGS_PER_STAGE, getTotalStages } from "@/data/levels";
+import { useButtonFeedback } from "@/hooks/useButtonFeedback";
 
 interface LevelsScreenProps {
   coins: number;
@@ -28,6 +29,7 @@ export const LevelsScreen: React.FC<LevelsScreenProps> = ({
   onSelectLevel,
   onHome,
 }) => {
+  const { withFeedback } = useButtonFeedback();
   const [expandedStage, setExpandedStage] = useState<number | null>(null);
 
   // Group songs into stages
@@ -66,7 +68,7 @@ export const LevelsScreen: React.FC<LevelsScreenProps> = ({
       {/* Header */}
       <header className="flex items-center justify-between p-4 sm:p-5">
         <button
-          onClick={onHome}
+          onClick={withFeedback(onHome)}
           className="w-10 h-10 rounded-xl bg-muted/50 border border-border/40 
                      flex items-center justify-center transition-all duration-200 active:scale-[0.96]"
         >
