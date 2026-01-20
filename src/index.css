@@ -95,9 +95,9 @@
     min-height: 100vh;
   }
 
-  /* iOS Safe Area */
+  /* iOS Safe Area - with minimum padding for visibility */
   .safe-area-top {
-    padding-top: env(safe-area-inset-top);
+    padding-top: max(env(safe-area-inset-top), 2.5rem);
   }
   
   .safe-area-bottom {
