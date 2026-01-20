@@ -49,6 +49,10 @@ interface UseDailyTimeAttackReturn {
   activePianoKeys: number[];
   audioProgress: number;
   
+  // Messages
+  message: string | null;
+  messageType: 'success' | 'error' | 'warning' | null;
+  
   // Results
   runResult: DailyRun | null;
   globalLeaderboard: LeaderboardEntry[];
@@ -63,6 +67,7 @@ interface UseDailyTimeAttackReturn {
   togglePlay: () => void;
   endRun: () => void;
   resetForNewRun: () => void;
+  fetchLeaderboard: () => Promise<void>;
 }
 
 /**
@@ -159,6 +164,10 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePianoKeys, setActivePianoKeys] = useState<number[]>([]);
   const [audioProgress, setAudioProgress] = useState(0);
+  
+  // Messages
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'warning' | null>(null);
   
   // Results
   const [runResult, setRunResult] = useState<DailyRun | null>(null);
@@ -488,17 +497,23 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       // CORRECT!
       setSlotState('correct');
       setCorrectCount(prev => prev + 1);
-      toast.success('נכון! ✅', { duration: 500 });
+      setMessage('נכון! ✅');
+      setMessageType('success');
       
       setTimeout(() => {
+        setMessage(null);
+        setMessageType(null);
         advanceToNextSong();
       }, 500);
     } else {
       // WRONG!
       setSlotState('wrong');
-      toast.error('לא נכון', { duration: 500 });
+      setMessage('לא נכון ❌');
+      setMessageType('error');
       
       setTimeout(() => {
+        setMessage(null);
+        setMessageType(null);
         // Reset slots but keep bubbles
         setSlots(prev => prev.map(s => s.isSpace ? s : { ...s, letter: null, bubbleId: null }));
         setBubbles(prev => prev.map(b => ({ ...b, isUsed: false })));
@@ -666,6 +681,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     isPlaying,
     activePianoKeys,
     audioProgress,
+    message,
+    messageType,
     runResult,
     globalLeaderboard,
     initialize,
@@ -676,6 +693,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     useYearHint,
     togglePlay,
     endRun,
-    resetForNewRun
+    resetForNewRun,
+    fetchLeaderboard
   };
 }

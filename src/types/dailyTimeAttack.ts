@@ -71,4 +71,7 @@ export type DailyScreen =
   | 'daily-results' 
   | 'groups' 
   | 'group-detail'
-  | 'group-leaderboard';
+  | 'group-leaderboard'
+  | 'leaderboard';
+
+export type MessageType = 'success' | 'error' | 'warning' | null;
