@@ -6,6 +6,7 @@ export interface DailySong {
   release_year: number;
   answer_pattern: number[]; // Length of each word, e.g., [3, 6] for "אגם בוחבוט"
   answer_length: number;    // Total letters (excluding spaces)
+  shuffled_letters: string[]; // Real answer letters + fake letters, shuffled
 }
 
 export interface DailySet {

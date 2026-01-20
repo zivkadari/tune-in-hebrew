@@ -102,12 +102,12 @@ function generateFakeLetters(count: number, existingLetters: string[]): string[]
 }
 
 /**
- * Create slots and bubbles for a song based on answer pattern
+ * Create slots and bubbles for a song based on answer pattern and shuffled letters from server
  * Pattern is an array of word lengths, e.g., [3, 6] for "אגם בוחבוט"
  */
 function createSlotsAndBubbles(
-  answerLength: number, 
-  answerPattern: number[]
+  answerPattern: number[],
+  shuffledLetters: string[]
 ): { slots: Slot[], bubbles: Bubble[] } {
   const slots: Slot[] = [];
   let slotId = 0;
@@ -125,13 +125,8 @@ function createSlotsAndBubbles(
     }
   });
   
-  // Generate random letters for bubbles
-  const allLetters = shuffleArray(
-    HEBREW_LETTERS.split('').slice(0, Math.min(TOTAL_BUBBLES, HEBREW_LETTERS.length))
-  );
-  
-  // Create bubbles
-  const bubbles: Bubble[] = allLetters.slice(0, TOTAL_BUBBLES).map((letter, idx) => ({
+  // Create bubbles from the shuffled letters provided by server
+  const bubbles: Bubble[] = shuffledLetters.map((letter, idx) => ({
     id: idx,
     letter,
     isUsed: false
@@ -275,11 +270,11 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     setIsPlaying(false);
     setAudioProgress(0);
     
-    // Setup first song using answer pattern from server
+    // Setup first song using answer pattern and shuffled letters from server
     const firstSong = dailySet.songs[0];
     const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(
-      firstSong.answer_length,
-      firstSong.answer_pattern
+      firstSong.answer_pattern,
+      firstSong.shuffled_letters
     );
     setSlots(newSlots);
     setBubbles(newBubbles);
@@ -470,8 +465,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     setCurrentSongIndex(nextIndex);
     const nextSong = dailySet.songs[nextIndex];
     const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(
-      nextSong.answer_length,
-      nextSong.answer_pattern
+      nextSong.answer_pattern,
+      nextSong.shuffled_letters
     );
     setSlots(newSlots);
     setBubbles(newBubbles);
