@@ -97,11 +97,11 @@
 
   /* iOS Safe Area - with minimum padding for visibility */
   .safe-area-top {
-    padding-top: max(env(safe-area-inset-top), 2.5rem);
+    padding-top: max(env(safe-area-inset-top), 3.5rem);
   }
   
   .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
   }
 }
 

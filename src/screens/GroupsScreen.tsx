@@ -3,6 +3,7 @@ import { Home, Plus, Users, ArrowLeft, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getPlayerId, getOrCreatePlayerId } from '@/lib/playerStorage';
 import { toast } from 'sonner';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import type { Group } from '@/types/dailyTimeAttack';
 
 interface GroupsScreenProps {
@@ -10,6 +11,7 @@ interface GroupsScreenProps {
 }
 
 export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
+  const { safeAreaTop } = useDeviceType();
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -141,7 +143,10 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-6 safe-area-top safe-area-bottom">
+    <div 
+      className="min-h-screen flex flex-col p-6 safe-area-bottom"
+      style={{ paddingTop: `${Math.max(safeAreaTop + 16, 56)}px` }}
+    >
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button 

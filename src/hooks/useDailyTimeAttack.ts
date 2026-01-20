@@ -164,10 +164,22 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const [runResult, setRunResult] = useState<DailyRun | null>(null);
   const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
   
-  // Refs
+  // Refs for timer-safe values (prevents stale closures)
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const correctCountRef = useRef(0);
+  const runTypeRef = useRef<RunType | null>(null);
+  const skipUsedRef = useRef(false);
+  const yearHintUsedRef = useRef(false);
+  const dailySetRef = useRef<DailySet | null>(null);
+
+  // Keep refs in sync with state
+  useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);
+  useEffect(() => { runTypeRef.current = runType; }, [runType]);
+  useEffect(() => { skipUsedRef.current = skipUsed; }, [skipUsed]);
+  useEffect(() => { yearHintUsedRef.current = yearHintUsed; }, [yearHintUsed]);
+  useEffect(() => { dailySetRef.current = dailySet; }, [dailySet]);
 
   // Current song helper
   const currentSong = dailySet?.songs[currentSongIndex] ?? null;
@@ -231,12 +243,16 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       return;
     }
     
-    // Reset game state
+    // Reset game state and refs immediately
     setRunType(type);
+    runTypeRef.current = type;
     setCurrentSongIndex(0);
     setCorrectCount(0);
+    correctCountRef.current = 0;
     setSkipUsed(false);
+    skipUsedRef.current = false;
     setYearHintUsed(false);
+    yearHintUsedRef.current = false;
     setTimeLeftMs(GAME_DURATION_MS);
     setSlotState('normal');
     setRunResult(null);
@@ -284,25 +300,53 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       audioRef.current = null;
     }
     
-    const elapsedMs = GAME_DURATION_MS - timeLeftMs;
-    const completedAll = correctCount >= SONGS_PER_GAME;
+    // Use refs for timer-safe values (prevents stale closure issues)
+    const currentCorrectCount = correctCountRef.current;
+    const currentRunType = runTypeRef.current;
+    const currentSkipUsed = skipUsedRef.current;
+    const currentYearHintUsed = yearHintUsedRef.current;
+    const currentDailySet = dailySetRef.current;
+    
+    const elapsedMs = Date.now() - startTimeRef.current;
+    const completedAll = currentCorrectCount >= SONGS_PER_GAME;
     const effectiveMs = completedAll 
       ? Math.max(0, elapsedMs - COMPLETION_BONUS_MS)
       : GAME_DURATION_MS;
     
     const pid = getPlayerId();
-    if (!pid || !dailySet || !runType) return;
     
-    // Save run via edge function (validates player ownership)
-    const runData = {
-      date: dailySet.date,
-      run_type: runType,
-      correct_count: correctCount,
+    // Create fallback result for display even if save fails
+    const fallbackResult: DailyRun = {
+      id: 'local-' + Date.now(),
+      player_id: pid || 'unknown',
+      date: currentDailySet?.date || new Date().toISOString().split('T')[0],
+      run_type: currentRunType || 'practice',
+      correct_count: currentCorrectCount,
       elapsed_ms: Math.round(elapsedMs),
       effective_ms: Math.round(effectiveMs),
       completed_all_12: completedAll,
-      skip_used: skipUsed,
-      year_hint_used: yearHintUsed
+      skip_used: currentSkipUsed,
+      year_hint_used: currentYearHintUsed,
+      created_at: new Date().toISOString()
+    };
+    
+    if (!pid || !currentDailySet || !currentRunType) {
+      console.error('Missing data for save:', { pid, currentDailySet, currentRunType });
+      // Still show results screen with fallback
+      setRunResult(fallbackResult);
+      return;
+    }
+    
+    // Save run via edge function (validates player ownership)
+    const runData = {
+      date: currentDailySet.date,
+      run_type: currentRunType,
+      correct_count: currentCorrectCount,
+      elapsed_ms: Math.round(elapsedMs),
+      effective_ms: Math.round(effectiveMs),
+      completed_all_12: completedAll,
+      skip_used: currentSkipUsed,
+      year_hint_used: currentYearHintUsed
     };
     
     try {
@@ -316,6 +360,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       if (error) {
         console.error('Error saving run:', error);
         toast.error('שגיאה בשמירת התוצאה');
+        setRunResult(fallbackResult);
         return;
       }
       
@@ -326,12 +371,13 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
         } else {
           toast.error(data.error);
         }
+        setRunResult(fallbackResult);
         return;
       }
       
       setRunResult(data.run as DailyRun);
       
-      if (runType === 'official') {
+      if (currentRunType === 'official') {
         setHasPlayedOfficialToday(true);
         setTodayOfficialRun(data.run as DailyRun);
       }
@@ -341,8 +387,9 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       
     } catch (err) {
       console.error('Error saving run:', err);
+      setRunResult(fallbackResult);
     }
-  }, [timeLeftMs, correctCount, dailySet, runType, skipUsed, yearHintUsed]);
+  }, []);
 
   /**
    * End run (exposed version)
