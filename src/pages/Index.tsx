@@ -12,7 +12,16 @@ import { DailyTimeAttackResults } from "@/screens/DailyTimeAttackResults";
 import { DailyLeaderboardScreen } from "@/screens/DailyLeaderboardScreen";
 import { GroupsScreen } from "@/screens/GroupsScreen";
 import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
+import { WelcomeNameDialog } from "@/components/WelcomeNameDialog";
 import type { DailyScreen } from "@/types/dailyTimeAttack";
+import { 
+  getPlayerId, 
+  getOrCreatePlayerId, 
+  getPlayerName, 
+  updatePlayerName,
+  isFirstTimePlayer,
+  markPlayerAsReturning 
+} from "@/lib/playerStorage";
 
 const Index = () => {
   // Campaign mode state
@@ -62,6 +71,39 @@ const Index = () => {
   const [showPracticeWarning, setShowPracticeWarning] = useState(false);
   
   const daily = useDailyTimeAttack();
+
+  // Welcome dialog state for first-time players
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
+
+  // Check if this is a first-time player on mount
+  useEffect(() => {
+    const checkFirstTimePlayer = async () => {
+      const existingPlayerId = getPlayerId();
+      
+      if (!existingPlayerId) {
+        // New player - create and show welcome dialog
+        await getOrCreatePlayerId();
+        const name = await getPlayerName();
+        setWelcomeName(name);
+        setShowWelcomeDialog(true);
+      } else if (isFirstTimePlayer()) {
+        // Has player ID but never completed welcome flow
+        const name = await getPlayerName();
+        setWelcomeName(name);
+        setShowWelcomeDialog(true);
+      }
+    };
+    
+    checkFirstTimePlayer();
+  }, []);
+
+  // Handle saving name from welcome dialog
+  const handleWelcomeSaveName = useCallback(async (name: string) => {
+    await updatePlayerName(name);
+    markPlayerAsReturning();
+    setShowWelcomeDialog(false);
+  }, []);
 
   // Initialize daily mode when entering
   useEffect(() => {
@@ -210,6 +252,11 @@ const Index = () => {
         <NewGameNoticeDialog
           open={showNewGameNotice}
           onClose={handleNewGameNoticeClose}
+        />
+        <WelcomeNameDialog
+          open={showWelcomeDialog}
+          defaultName={welcomeName}
+          onSave={handleWelcomeSaveName}
         />
       </>
     );

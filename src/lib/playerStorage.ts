@@ -2,6 +2,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 const PLAYER_ID_KEY = "daily-time-attack-player-id";
 const PLAYER_NAME_KEY = "daily-time-attack-player-name";
+const FIRST_TIME_KEY = "daily-time-attack-first-time";
+
+/**
+ * Check if this is a first-time player (hasn't completed welcome flow)
+ */
+export const isFirstTimePlayer = (): boolean => {
+  return localStorage.getItem(FIRST_TIME_KEY) !== 'false';
+};
+
+/**
+ * Mark player as returning (completed welcome flow)
+ */
+export const markPlayerAsReturning = (): void => {
+  localStorage.setItem(FIRST_TIME_KEY, 'false');
+};
 
 export interface Player {
   id: string;
