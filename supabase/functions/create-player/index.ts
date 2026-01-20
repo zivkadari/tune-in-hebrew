@@ -22,15 +22,60 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client with service role to bypass RLS
+    // Validate auth - require JWT from anonymous auth
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Validate JWT with anon client
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: authData, error: authError } = await anonClient.auth.getUser(token);
+    
+    if (authError || !authData.user) {
+      console.log("Auth failed:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const authUserId = authData.user.id;
+    console.log(`[create-player] Auth user: ${authUserId}`);
+
+    // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Create new player with auto-generated name
+    // Check if player already exists for this auth user
+    const { data: existingPlayer, error: existingError } = await supabase
+      .from("players")
+      .select("*")
+      .eq("auth_user_id", authUserId)
+      .single();
+
+    if (existingPlayer) {
+      console.log(`[create-player] Player already exists for auth user ${authUserId}`);
+      return new Response(
+        JSON.stringify({ success: true, player: existingPlayer }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create new player with auth_user_id
     const { data: player, error: createError } = await supabase
       .from("players")
-      .insert({})
+      .insert({ auth_user_id: authUserId })
       .select()
       .single();
 
@@ -42,7 +87,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Created new player: ${player.id}`);
+    console.log(`[create-player] Created new player: ${player.id} for auth user: ${authUserId}`);
 
     return new Response(
       JSON.stringify({ success: true, player }),

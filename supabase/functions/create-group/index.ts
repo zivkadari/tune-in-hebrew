@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-player-id",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -22,23 +22,56 @@ serve(async (req) => {
       );
     }
 
-    // Get player ID from header
-    const playerId = req.headers.get("x-player-id");
-    if (!playerId) {
+    // Validate auth - require JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Missing player ID" }),
+        JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(playerId)) {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Validate JWT with anon client
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: authData, error: authError } = await anonClient.auth.getUser(token);
+    
+    if (authError || !authData.user) {
+      console.log("Auth failed:", authError?.message);
       return new Response(
-        JSON.stringify({ error: "Invalid player ID format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const authUserId = authData.user.id;
+
+    // Use service role client for DB operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get player by auth_user_id
+    const { data: player, error: playerError } = await supabase
+      .from("players")
+      .select("id")
+      .eq("auth_user_id", authUserId)
+      .single();
+
+    if (playerError || !player) {
+      console.error("Player not found for auth user:", authUserId);
+      return new Response(
+        JSON.stringify({ error: "Player not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const playerId = player.id;
 
     // Parse request body
     const body = await req.json();
@@ -58,26 +91,6 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Group name must be between 1 and 50 characters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create Supabase client with service role to bypass RLS
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify player exists
-    const { data: player, error: playerError } = await supabase
-      .from("players")
-      .select("id")
-      .eq("id", playerId)
-      .single();
-
-    if (playerError || !player) {
-      console.error("Player not found:", playerError);
-      return new Response(
-        JSON.stringify({ error: "Player not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -113,7 +126,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Player ${playerId} created group ${group.id}`);
+    console.log(`[create-group] Player ${playerId} created group ${group.id}`);
 
     return new Response(
       JSON.stringify({ success: true, group }),

@@ -3,8 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-player-id",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 serve(async (req) => {
@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow GET
-    if (req.method !== "GET") {
+    // Allow both GET and POST
+    if (req.method !== "GET" && req.method !== "POST") {
       return new Response(
         JSON.stringify({ error: "Method not allowed" }),
         { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -41,8 +41,37 @@ serve(async (req) => {
       );
     }
 
-    // Get player ID from header (optional - for marking current player)
-    const playerId = req.headers.get("x-player-id");
+    // Optional: Get current player from JWT if present
+    let currentPlayerId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      
+      const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: authData } = await anonClient.auth.getUser(token);
+      
+      if (authData?.user) {
+        // Get player ID from auth user
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+        
+        const { data: player } = await serviceClient
+          .from("players")
+          .select("id")
+          .eq("auth_user_id", authData.user.id)
+          .single();
+        
+        if (player) {
+          currentPlayerId = player.id;
+        }
+      }
+    }
 
     // Create Supabase client with service role
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -91,7 +120,7 @@ serve(async (req) => {
       correct_count: run.correct_count,
       effective_ms: run.effective_ms,
       created_at: run.created_at,
-      is_current_player: playerId ? run.player_id === playerId : false
+      is_current_player: currentPlayerId ? run.player_id === currentPlayerId : false
     }));
 
     return new Response(
