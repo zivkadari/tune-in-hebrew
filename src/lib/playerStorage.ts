@@ -25,23 +25,20 @@ export interface Player {
 }
 
 /**
- * Initialize anonymous auth and get/create player
+ * Get or create player - assumes session already exists (initialized in Index.tsx)
  */
 export const getOrCreatePlayerId = async (): Promise<string> => {
-  // Check if we already have a session
+  // Verify we have a session (should already exist from Index.tsx initialization)
   const { data: { session } } = await supabase.auth.getSession();
   
   if (!session) {
-    // Create anonymous session
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      console.error('Error signing in anonymously:', error);
-      throw new Error('Failed to create anonymous session');
-    }
-    console.log('Created anonymous session:', data.user?.id);
+    console.error('No session found - this should not happen');
+    throw new Error('No active session. Please refresh the page.');
   }
   
-  // Now create/get player via edge function (uses JWT from session)
+  console.log('Creating/getting player for auth user:', session.user.id);
+  
+  // Create/get player via edge function (uses JWT from session)
   const { data, error } = await supabase.functions.invoke('create-player', {
     body: {},
   });
