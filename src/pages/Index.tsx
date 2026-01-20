@@ -202,6 +202,12 @@ const Index = () => {
     setDailyScreen(null);
   }, []);
 
+  // Handle showing leaderboard
+  const handleShowLeaderboard = useCallback(async () => {
+    await daily.fetchLeaderboard();
+    setDailyScreen('leaderboard');
+  }, [daily]);
+
   // Effect to detect when run ends (isRunning becomes false while on run screen)
   useEffect(() => {
     if (dailyScreen === 'daily-run' && !daily.isRunning) {
@@ -226,12 +232,6 @@ const Index = () => {
       />
     );
   }
-
-  // Handle showing leaderboard
-  const handleShowLeaderboard = useCallback(async () => {
-    await daily.fetchLeaderboard();
-    setDailyScreen('leaderboard');
-  }, [daily]);
 
   if (dailyScreen === 'daily-home') {
     return (
