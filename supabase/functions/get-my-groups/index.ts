@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow GET
-    if (req.method !== "GET") {
+    // Only allow GET or POST (supabase.functions.invoke uses POST by default)
+    if (req.method !== "GET" && req.method !== "POST") {
       return new Response(
         JSON.stringify({ error: "Method not allowed" }),
         { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
