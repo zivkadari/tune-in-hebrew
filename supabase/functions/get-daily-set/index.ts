@@ -8,7 +8,7 @@ const corsHeaders = {
 interface DailySong {
   id: number;
   type: 'song' | 'artist';
-  answer: string;
+  encrypted_answer: string;
   audio_url: string;
   release_year: number;
 }
@@ -19,6 +19,57 @@ interface DailySet {
 }
 
 const SONGS_PER_DAY = 12;
+
+/**
+ * Encrypt answer using AES-GCM
+ */
+async function encryptAnswer(plaintext: string): Promise<string> {
+  const encryptionKey = Deno.env.get("ANSWER_ENCRYPTION_KEY");
+  if (!encryptionKey) {
+    throw new Error("Encryption key not configured");
+  }
+
+  const encoder = new TextEncoder();
+  
+  // Derive key using PBKDF2
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(encryptionKey),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  
+  const key = await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode("tune-in-hebrew-salt"),
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt"]
+  );
+  
+  // Generate random IV
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  
+  // Encrypt
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encoder.encode(plaintext)
+  );
+  
+  // Combine IV + ciphertext and encode as base64
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  
+  return btoa(String.fromCharCode(...combined));
+}
 
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
@@ -134,17 +185,29 @@ Deno.serve(async (req: Request) => {
       throw songsDataError;
     }
 
-    // Order songs according to songIds order
-    const orderedSongs: DailySong[] = songIds.map(id => 
-      songs!.find(s => s.id === id)!
-    ).filter(Boolean);
+    // Order songs according to songIds order and encrypt answers
+    const orderedSongs: DailySong[] = [];
+    for (const id of songIds) {
+      const song = songs!.find(s => s.id === id);
+      if (song) {
+        // Encrypt the answer before sending to client
+        const encryptedAnswer = await encryptAnswer(song.answer);
+        orderedSongs.push({
+          id: song.id,
+          type: song.type,
+          encrypted_answer: encryptedAnswer,
+          audio_url: song.audio_url,
+          release_year: song.release_year,
+        });
+      }
+    }
 
     const result: DailySet = {
       date: today,
       songs: orderedSongs
     };
 
-    console.log(`[get-daily-set] Returning ${orderedSongs.length} songs for ${today}`);
+    console.log(`[get-daily-set] Returning ${orderedSongs.length} songs for ${today} (answers encrypted)`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

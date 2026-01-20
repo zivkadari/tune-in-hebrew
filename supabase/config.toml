@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.get-player-run]
 verify_jwt = false
+
+[functions.verify-answer]
+verify_jwt = false

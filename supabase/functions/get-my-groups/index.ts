@@ -3,8 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-player-id",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 serve(async (req) => {
@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow GET or POST (supabase.functions.invoke uses POST by default)
+    // Allow both GET and POST
     if (req.method !== "GET" && req.method !== "POST") {
       return new Response(
         JSON.stringify({ error: "Method not allowed" }),
@@ -22,42 +22,56 @@ serve(async (req) => {
       );
     }
 
-    // Get player ID from header
-    const playerId = req.headers.get("x-player-id");
-    if (!playerId) {
+    // Validate auth - require JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Missing player ID" }),
+        JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(playerId)) {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Validate JWT with anon client
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: authData, error: authError } = await anonClient.auth.getUser(token);
+    
+    if (authError || !authData.user) {
+      console.log("Auth failed:", authError?.message);
       return new Response(
-        JSON.stringify({ error: "Invalid player ID format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create Supabase client with service role to bypass RLS
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authUserId = authData.user.id;
+
+    // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify player exists
+    // Get player by auth_user_id
     const { data: player, error: playerError } = await supabase
       .from("players")
       .select("id")
-      .eq("id", playerId)
+      .eq("auth_user_id", authUserId)
       .single();
 
     if (playerError || !player) {
+      // No player yet, return empty groups
       return new Response(
-        JSON.stringify({ error: "Player not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ groups: [] }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const playerId = player.id;
 
     // Get all groups the player is a member of
     const { data: memberships, error: memberError } = await supabase

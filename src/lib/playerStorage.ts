@@ -25,19 +25,23 @@ export interface Player {
 }
 
 /**
- * Get the player ID from localStorage, or create a new anonymous player
- * Uses secure edge function for player creation
+ * Initialize anonymous auth and get/create player
  */
 export const getOrCreatePlayerId = async (): Promise<string> => {
-  let playerId = localStorage.getItem(PLAYER_ID_KEY);
+  // Check if we already have a session
+  const { data: { session } } = await supabase.auth.getSession();
   
-  if (playerId) {
-    // We can't verify via direct DB call anymore (RLS blocks it)
-    // Just trust localStorage for existing players
-    return playerId;
+  if (!session) {
+    // Create anonymous session
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) {
+      console.error('Error signing in anonymously:', error);
+      throw new Error('Failed to create anonymous session');
+    }
+    console.log('Created anonymous session:', data.user?.id);
   }
   
-  // Create new player via secure edge function
+  // Now create/get player via edge function (uses JWT from session)
   const { data, error } = await supabase.functions.invoke('create-player', {
     body: {},
   });
@@ -52,7 +56,7 @@ export const getOrCreatePlayerId = async (): Promise<string> => {
     throw new Error(data.error);
   }
   
-  playerId = data.player.id;
+  const playerId = data.player.id;
   localStorage.setItem(PLAYER_ID_KEY, playerId);
   localStorage.setItem(PLAYER_NAME_KEY, data.player.display_name);
   
@@ -68,7 +72,6 @@ export const getPlayerId = (): string | null => {
 
 /**
  * Get the player's display name from localStorage
- * We no longer fetch from DB due to RLS restrictions
  */
 export const getPlayerName = async (): Promise<string> => {
   const cached = localStorage.getItem(PLAYER_NAME_KEY);
@@ -78,17 +81,10 @@ export const getPlayerName = async (): Promise<string> => {
 
 /**
  * Update the player's display name via secure edge function
- * The edge function validates player ownership before updating
  */
 export const updatePlayerName = async (newName: string): Promise<void> => {
-  const playerId = getPlayerId();
-  if (!playerId) throw new Error('No player ID found');
-  
   const { data, error } = await supabase.functions.invoke('update-player-name', {
     body: { display_name: newName },
-    headers: {
-      'x-player-id': playerId,
-    },
   });
   
   if (error) {
@@ -105,7 +101,6 @@ export const updatePlayerName = async (newName: string): Promise<void> => {
 
 /**
  * Get the full player data from localStorage
- * We no longer fetch from DB due to RLS restrictions
  */
 export const getPlayer = async (): Promise<Player | null> => {
   const playerId = getPlayerId();
@@ -116,6 +111,6 @@ export const getPlayer = async (): Promise<Player | null> => {
   return {
     id: playerId,
     display_name: displayName,
-    created_at: new Date().toISOString() // Approximate
+    created_at: new Date().toISOString()
   };
 };
