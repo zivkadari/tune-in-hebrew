@@ -13,6 +13,41 @@ interface DailySong {
   release_year: number;
   answer_pattern: number[]; // Length of each word
   answer_length: number;    // Total letters (excluding spaces)
+  shuffled_letters: string[]; // Real answer letters + fake letters, shuffled
+}
+
+const TOTAL_BUBBLES = 14;
+const HEBREW_LETTERS = 'אבגדהוזחטיכלמנסעפצקרשת';
+
+/**
+ * Shuffle array using Fisher-Yates algorithm
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
+ * Generate random fake Hebrew letters that aren't in the existing set
+ */
+function generateFakeLetters(count: number, existingLetters: string[]): string[] {
+  const fakes: string[] = [];
+  const available = HEBREW_LETTERS.split('').filter(l => !existingLetters.includes(l));
+  
+  for (let i = 0; i < count; i++) {
+    if (available.length > 0) {
+      const idx = Math.floor(Math.random() * available.length);
+      fakes.push(available[idx]);
+    } else {
+      // If we run out, just pick random
+      fakes.push(HEBREW_LETTERS[Math.floor(Math.random() * HEBREW_LETTERS.length)]);
+    }
+  }
+  return fakes;
 }
 
 interface DailySet {
@@ -200,6 +235,12 @@ Deno.serve(async (req: Request) => {
         const answerPattern = words.map((w: string) => w.length);
         const answerLength = words.reduce((sum: number, w: string) => sum + w.length, 0);
         
+        // Extract answer letters (without spaces) and create shuffled letter pool
+        const answerLetters = song.answer.replace(/\s/g, '').split('');
+        const fakeCount = Math.max(0, TOTAL_BUBBLES - answerLetters.length);
+        const fakeLetters = generateFakeLetters(fakeCount, answerLetters);
+        const shuffledLetters = shuffleArray([...answerLetters, ...fakeLetters]);
+        
         orderedSongs.push({
           id: song.id,
           type: song.type,
@@ -208,6 +249,7 @@ Deno.serve(async (req: Request) => {
           release_year: song.release_year,
           answer_pattern: answerPattern,
           answer_length: answerLength,
+          shuffled_letters: shuffledLetters,
         });
       }
     }
