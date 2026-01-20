@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Settings, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Settings, AlertTriangle, Edit } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,19 +17,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EditNameDialog } from "./EditNameDialog";
+import { getPlayerName, updatePlayerName } from "@/lib/playerStorage";
 
 interface SettingsDialogProps {
   onFullReset: () => void;
+  onNameChange?: (newName: string) => void;
 }
 
-export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset }) => {
+export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onNameChange }) => {
   const [open, setOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showEditName, setShowEditName] = useState(false);
+  const [currentName, setCurrentName] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      getPlayerName().then(setCurrentName);
+    }
+  }, [open]);
 
   const handleReset = () => {
     onFullReset();
     setShowResetConfirm(false);
     setOpen(false);
+  };
+
+  const handleSaveName = async (newName: string) => {
+    await updatePlayerName(newName);
+    setCurrentName(newName);
+    onNameChange?.(newName);
   };
 
   return (
@@ -44,7 +61,17 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset }) =
           <DialogHeader>
             <DialogTitle className="text-center text-xl">⚙️ הגדרות</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-3">
+            {/* Change name button */}
+            <button
+              onClick={() => setShowEditName(true)}
+              className="w-full p-4 rounded-xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors flex items-center justify-center gap-3 text-primary"
+            >
+              <Edit className="w-5 h-5" />
+              <span className="font-medium">שינוי שם משתמש</span>
+            </button>
+            
+            {/* Reset button */}
             <button
               onClick={() => setShowResetConfirm(true)}
               className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-3 text-red-400"
@@ -55,6 +82,13 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset }) =
           </div>
         </DialogContent>
       </Dialog>
+
+      <EditNameDialog
+        open={showEditName}
+        onOpenChange={setShowEditName}
+        currentName={currentName}
+        onSave={handleSaveName}
+      />
 
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent className="max-w-sm">
