@@ -72,6 +72,7 @@ export type SlotState = 'normal' | 'correct' | 'wrong';
 export type DailyScreen = 
   | 'daily-home' 
   | 'daily-run' 
+  | 'daily-run-ending'  // Intermediate state while saving results
   | 'daily-results' 
   | 'groups' 
   | 'group-detail'

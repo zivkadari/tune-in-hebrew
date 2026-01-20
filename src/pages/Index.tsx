@@ -170,9 +170,16 @@ const Index = () => {
     setDailyScreen(null);
   }, []);
 
-  // Effect to show results when run ends
+  // Effect to detect when run ends (isRunning becomes false while on run screen)
   useEffect(() => {
-    if (daily.runResult && dailyScreen === 'daily-run') {
+    if (dailyScreen === 'daily-run' && !daily.isRunning) {
+      setDailyScreen('daily-run-ending');
+    }
+  }, [daily.isRunning, dailyScreen]);
+
+  // Effect to show results when they're ready
+  useEffect(() => {
+    if (daily.runResult && dailyScreen === 'daily-run-ending') {
       setDailyScreen('daily-results');
     }
   }, [daily.runResult, dailyScreen]);
@@ -208,7 +215,7 @@ const Index = () => {
     );
   }
 
-  if (dailyScreen === 'daily-run' && daily.isRunning) {
+  if (dailyScreen === 'daily-run') {
     return (
       <DailyTimeAttackRun
         runType={daily.runType!}
@@ -232,6 +239,17 @@ const Index = () => {
         onTogglePlay={daily.togglePlay}
         onQuit={handleQuitDailyRun}
       />
+    );
+  }
+
+  if (dailyScreen === 'daily-run-ending') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background to-background/80">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-xl font-bold text-foreground">שומר תוצאות...</p>
+        </div>
+      </div>
     );
   }
 
