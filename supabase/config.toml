@@ -29,3 +29,15 @@ verify_jwt = false
 
 [functions.verify-answer]
 verify_jwt = false
+
+[functions.get-group-members]
+verify_jwt = false
+
+[functions.remove-group-member]
+verify_jwt = false
+
+[functions.get-all-time-leaderboard]
+verify_jwt = false
+
+[functions.get-group-leaderboard]
+verify_jwt = false
