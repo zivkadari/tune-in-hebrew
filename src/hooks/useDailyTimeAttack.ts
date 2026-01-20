@@ -218,17 +218,12 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       setDailySet(dailySetData);
       
       // Check if player already played official today via edge function
-      const { data: runData, error: runError } = await supabase.functions.invoke('get-player-run', {
-        body: null,
-      });
-      
-      // Need to pass date as query param - use fetch
-      const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-player-run');
-      url.searchParams.set('date', dailySetData.date);
-      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
+        const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-player-run');
+        url.searchParams.set('date', dailySetData.date);
+        
         const runResponse = await fetch(url.toString(), {
           method: 'GET',
           headers: {
