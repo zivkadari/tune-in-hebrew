@@ -44,23 +44,32 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
   const createGroup = async () => {
     if (!playerId || !newGroupName.trim()) return;
     
-    const { data, error } = await supabase
+    // First create the group
+    const { data: groupData, error: groupError } = await supabase
       .from('groups')
       .insert({ name: newGroupName.trim(), created_by: playerId })
       .select()
       .single();
     
-    if (error) {
+    if (groupError) {
+      console.error('Error creating group:', groupError);
       toast.error('שגיאה ביצירת קבוצה');
       return;
     }
     
-    // Auto-join the created group
-    await supabase
+    // Then auto-join the created group
+    const { error: joinError } = await supabase
       .from('group_members')
-      .insert({ group_id: data.id, player_id: playerId });
+      .insert({ group_id: groupData.id, player_id: playerId });
     
-    toast.success('הקבוצה נוצרה! 🎉');
+    if (joinError) {
+      console.error('Error joining group:', joinError);
+      // Group was created but couldn't join - still show success but warn
+      toast.warning('הקבוצה נוצרה אך לא הצלחת להצטרף אוטומטית');
+    } else {
+      toast.success('הקבוצה נוצרה! 🎉');
+    }
+    
     setNewGroupName('');
     setShowCreateForm(false);
     fetchMyGroups();
