@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, AlertTriangle, Edit } from "lucide-react";
+import { Settings, AlertTriangle, Edit, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EditNameDialog } from "./EditNameDialog";
-import { getPlayerName, updatePlayerName } from "@/lib/playerStorage";
+import { getPlayerName, updatePlayerName, deletePlayer } from "@/lib/playerStorage";
+import { toast } from "sonner";
 
 interface SettingsDialogProps {
   onFullReset: () => void;
@@ -28,8 +29,10 @@ interface SettingsDialogProps {
 export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onNameChange }) => {
   const [open, setOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditName, setShowEditName] = useState(false);
   const [currentName, setCurrentName] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -47,6 +50,23 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
     await updatePlayerName(newName);
     setCurrentName(newName);
     onNameChange?.(newName);
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await deletePlayer();
+      toast.success('החשבון נמחק בהצלחה');
+      setShowDeleteConfirm(false);
+      setOpen(false);
+      // Reload the page to start fresh
+      window.location.reload();
+    } catch (err: any) {
+      console.error('Error deleting account:', err);
+      toast.error(err.message || 'שגיאה במחיקת החשבון');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -74,10 +94,19 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
             {/* Reset button */}
             <button
               onClick={() => setShowResetConfirm(true)}
-              className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-3 text-red-400"
+              className="w-full p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-3 text-orange-400"
             >
               <AlertTriangle className="w-5 h-5" />
               <span className="font-medium">איפוס מלא של המשחק</span>
+            </button>
+            
+            {/* Delete account button */}
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-3 text-red-400"
+            >
+              <Trash2 className="w-5 h-5" />
+              <span className="font-medium">מחיקת חשבון לצמיתות</span>
             </button>
           </div>
         </DialogContent>
@@ -109,6 +138,37 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
               className="flex-1 bg-red-500 hover:bg-red-600 text-white"
             >
               כן, לאפס
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-xl">
+              🗑️ מחיקת חשבון לצמיתות?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-base leading-relaxed">
+              <strong className="text-destructive">פעולה זו בלתי הפיכה!</strong>
+              <br /><br />
+              הפעולה תמחק לצמיתות:
+              <br />• את החשבון שלך
+              <br />• את כל הקבוצות שיצרת
+              <br />• את כל התוצאות שלך
+              <br />• את החברויות בקבוצות
+              <br /><br />
+              לאחר המחיקה תוכל ליצור חשבון חדש.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3 sm:justify-center">
+            <AlertDialogCancel className="flex-1" disabled={isDeleting}>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+            >
+              {isDeleting ? 'מוחק...' : 'כן, למחוק'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

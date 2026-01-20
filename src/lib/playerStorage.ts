@@ -111,3 +111,48 @@ export const getPlayer = async (): Promise<Player | null> => {
     created_at: new Date().toISOString()
   };
 };
+
+/**
+ * Delete the player account completely
+ * This removes the player from all groups, deletes their runs, and removes their player record
+ */
+export const deletePlayer = async (): Promise<void> => {
+  const { data, error } = await supabase.functions.invoke('delete-player', {
+    body: {},
+  });
+  
+  if (error) {
+    console.error('Error deleting player:', error);
+    throw error;
+  }
+  
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+  
+  // Clear all local storage
+  localStorage.removeItem(PLAYER_ID_KEY);
+  localStorage.removeItem(PLAYER_NAME_KEY);
+  localStorage.removeItem(FIRST_TIME_KEY);
+  
+  // Sign out from Supabase
+  await supabase.auth.signOut();
+};
+
+/**
+ * Leave a specific group
+ */
+export const leaveGroup = async (groupId: string): Promise<void> => {
+  const { data, error } = await supabase.functions.invoke('leave-group', {
+    body: { group_id: groupId },
+  });
+  
+  if (error) {
+    console.error('Error leaving group:', error);
+    throw error;
+  }
+  
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+};

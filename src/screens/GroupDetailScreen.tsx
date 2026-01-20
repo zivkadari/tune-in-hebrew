@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Copy, Check, Crown, Trash2, Users, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Crown, Trash2, Users, RefreshCw, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { leaveGroup } from '@/lib/playerStorage';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,8 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
   const [isLoading, setIsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
     fetchGroupDetails();
@@ -128,6 +131,23 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
       navigator.clipboard.writeText(group.join_code);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!group) return;
+    
+    setIsLeaving(true);
+    try {
+      await leaveGroup(group.id);
+      toast.success('עזבת את הקבוצה בהצלחה');
+      setShowLeaveConfirm(false);
+      onBack();
+    } catch (err: any) {
+      console.error('Error leaving group:', err);
+      toast.error(err.message || 'שגיאה בעזיבת הקבוצה');
+    } finally {
+      setIsLeaving(false);
     }
   };
 
@@ -229,6 +249,17 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
         </div>
       </div>
 
+      {/* Leave Group Button - only for non-creators */}
+      {!isCreator && (
+        <button
+          onClick={() => setShowLeaveConfirm(true)}
+          className="w-full mt-4 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-3 text-orange-400"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="font-medium">עזיבת הקבוצה</span>
+        </button>
+      )}
+
       {/* Remove Member Confirmation Dialog */}
       <AlertDialog open={!!memberToRemove} onOpenChange={() => setMemberToRemove(null)}>
         <AlertDialogContent>
@@ -247,6 +278,29 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
               הסר
             </AlertDialogAction>
             <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Leave Group Confirmation Dialog */}
+      <AlertDialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>עזיבת הקבוצה</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך לעזוב את הקבוצה "{group?.name}"?
+              תוכל להצטרף מחדש בעזרת קוד ההצטרפות.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction 
+              onClick={handleLeaveGroup}
+              disabled={isLeaving}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              {isLeaving ? 'עוזב...' : 'עזוב'}
+            </AlertDialogAction>
+            <AlertDialogCancel disabled={isLeaving}>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

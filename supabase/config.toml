@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.get-group-leaderboard]
 verify_jwt = false
+
+[functions.leave-group]
+verify_jwt = false
+
+[functions.delete-player]
+verify_jwt = false
