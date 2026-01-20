@@ -4,6 +4,8 @@ export interface DailySong {
   encrypted_answer: string; // Server-encrypted answer - client cannot decrypt
   audio_url: string;
   release_year: number;
+  answer_pattern: number[]; // Length of each word, e.g., [3, 6] for "אגם בוחבוט"
+  answer_length: number;    // Total letters (excluding spaces)
 }
 
 export interface DailySet {

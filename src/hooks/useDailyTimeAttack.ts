@@ -102,27 +102,28 @@ function generateFakeLetters(count: number, existingLetters: string[]): string[]
 }
 
 /**
- * Estimate answer length from encrypted data
- * Since we can't decrypt, we generate a reasonable number of slots
+ * Create slots and bubbles for a song based on answer pattern
+ * Pattern is an array of word lengths, e.g., [3, 6] for "אגם בוחבוט"
  */
-function estimateAnswerLength(encryptedAnswer: string): number {
-  // Base64 encrypted data has some overhead, but we can estimate
-  // A typical Hebrew song name is 5-15 characters
-  // We'll use a default and let the server verify
-  return 10; // Default estimate
-}
-
-/**
- * Create slots and bubbles for a song
- * Since answer is encrypted, we create slots based on estimate
- * and verify via server when user submits
- */
-function createSlotsAndBubbles(answerLength: number): { slots: Slot[], bubbles: Bubble[] } {
-  // Create slots without spaces (we don't know where spaces are)
+function createSlotsAndBubbles(
+  answerLength: number, 
+  answerPattern: number[]
+): { slots: Slot[], bubbles: Bubble[] } {
   const slots: Slot[] = [];
-  for (let i = 0; i < answerLength; i++) {
-    slots.push({ id: i, letter: null, bubbleId: null, isSpace: false });
-  }
+  let slotId = 0;
+  
+  // Create slots according to word pattern with spaces between words
+  answerPattern.forEach((wordLength, wordIndex) => {
+    // Add space slot between words (not before first word)
+    if (wordIndex > 0) {
+      slots.push({ id: slotId++, letter: null, bubbleId: null, isSpace: true });
+    }
+    
+    // Add letter slots for this word
+    for (let i = 0; i < wordLength; i++) {
+      slots.push({ id: slotId++, letter: null, bubbleId: null, isSpace: false });
+    }
+  });
   
   // Generate random letters for bubbles
   const allLetters = shuffleArray(
@@ -274,10 +275,12 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     setIsPlaying(false);
     setAudioProgress(0);
     
-    // Setup first song - use estimated length since answer is encrypted
+    // Setup first song using answer pattern from server
     const firstSong = dailySet.songs[0];
-    const estimatedLength = estimateAnswerLength(firstSong.encrypted_answer);
-    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(estimatedLength);
+    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(
+      firstSong.answer_length,
+      firstSong.answer_pattern
+    );
     setSlots(newSlots);
     setBubbles(newBubbles);
     
@@ -466,8 +469,10 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     
     setCurrentSongIndex(nextIndex);
     const nextSong = dailySet.songs[nextIndex];
-    const estimatedLength = estimateAnswerLength(nextSong.encrypted_answer);
-    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(estimatedLength);
+    const { slots: newSlots, bubbles: newBubbles } = createSlotsAndBubbles(
+      nextSong.answer_length,
+      nextSong.answer_pattern
+    );
     setSlots(newSlots);
     setBubbles(newBubbles);
     setSlotState('normal');

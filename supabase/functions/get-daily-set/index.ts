@@ -11,6 +11,8 @@ interface DailySong {
   encrypted_answer: string;
   audio_url: string;
   release_year: number;
+  answer_pattern: number[]; // Length of each word
+  answer_length: number;    // Total letters (excluding spaces)
 }
 
 interface DailySet {
@@ -192,12 +194,20 @@ Deno.serve(async (req: Request) => {
       if (song) {
         // Encrypt the answer before sending to client
         const encryptedAnswer = await encryptAnswer(song.answer);
+        
+        // Calculate answer pattern (word lengths) without revealing the answer
+        const words = song.answer.split(' ').filter((w: string) => w.length > 0);
+        const answerPattern = words.map((w: string) => w.length);
+        const answerLength = words.reduce((sum: number, w: string) => sum + w.length, 0);
+        
         orderedSongs.push({
           id: song.id,
           type: song.type,
           encrypted_answer: encryptedAnswer,
           audio_url: song.audio_url,
           release_year: song.release_year,
+          answer_pattern: answerPattern,
+          answer_length: answerLength,
         });
       }
     }
