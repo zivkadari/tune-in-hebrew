@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Clock, Play, Trophy, Users, Home, CheckCircle, Dumbbell } from 'lucide-react';
 import { PracticeWarningDialog } from '@/components/PracticeWarningDialog';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { useButtonFeedback } from '@/hooks/useButtonFeedback';
 import type { RunType } from '@/types/dailyTimeAttack';
 
 interface DailyTimeAttackHomeProps {
@@ -22,6 +23,7 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
   onBack
 }) => {
   const { safeAreaTop } = useDeviceType();
+  const { withFeedback } = useButtonFeedback();
   const [showPracticeWarning, setShowPracticeWarning] = useState(false);
 
   const handlePracticeClick = () => {
@@ -51,7 +53,7 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
 
       {/* Back button */}
       <button 
-        onClick={onBack}
+        onClick={withFeedback(onBack)}
         className="absolute left-6 p-2 rounded-full glass-card hover:bg-muted/50 transition-colors"
         style={{ top: `${Math.max(safeAreaTop + 8, 48)}px` }}
       >
@@ -98,7 +100,7 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
         <div className="flex flex-col gap-3 w-full">
           {!hasPlayedOfficialToday && (
             <button 
-              onClick={() => onStartRun('official')}
+              onClick={withFeedback(() => onStartRun('official'))}
               className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
             >
               <Play className="w-6 h-6" fill="currentColor" />
@@ -107,7 +109,7 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
           )}
 
           <button 
-            onClick={handlePracticeClick}
+            onClick={withFeedback(handlePracticeClick)}
             className="btn-secondary w-full flex items-center justify-center gap-2 py-4"
           >
             <Dumbbell className="w-5 h-5" />
@@ -119,14 +121,14 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
 
           <div className="flex gap-3">
             <button 
-              onClick={onLeaderboard}
+              onClick={withFeedback(onLeaderboard)}
               className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3"
             >
               <Trophy className="w-5 h-5" />
               <span>דירוג</span>
             </button>
             <button 
-              onClick={onGroups}
+              onClick={withFeedback(onGroups)}
               className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3"
             >
               <Users className="w-5 h-5" />

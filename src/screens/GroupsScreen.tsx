@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getPlayerId, getOrCreatePlayerId } from '@/lib/playerStorage';
 import { toast } from 'sonner';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { useButtonFeedback } from '@/hooks/useButtonFeedback';
 import type { Group } from '@/types/dailyTimeAttack';
 
 interface GroupsScreenProps {
@@ -13,6 +14,7 @@ interface GroupsScreenProps {
 
 export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack, onGroupClick }) => {
   const { safeAreaTop } = useDeviceType();
+  const { withFeedback } = useButtonFeedback();
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -143,7 +145,7 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack, onGroupClick
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button 
-          onClick={onBack}
+          onClick={withFeedback(onBack)}
           className="p-2 rounded-full glass-card hover:bg-muted/50 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -157,14 +159,14 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack, onGroupClick
       {/* Actions */}
       <div className="flex gap-3 mb-6">
         <button
-          onClick={() => { setShowCreateForm(true); setShowJoinForm(false); }}
+          onClick={withFeedback(() => { setShowCreateForm(true); setShowJoinForm(false); })}
           className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
         >
           <Plus className="w-5 h-5" />
           צור קבוצה
         </button>
         <button
-          onClick={() => { setShowJoinForm(true); setShowCreateForm(false); }}
+          onClick={withFeedback(() => { setShowJoinForm(true); setShowCreateForm(false); })}
           className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3"
         >
           <Users className="w-5 h-5" />

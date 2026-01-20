@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import { Settings, AlertTriangle, Edit, Trash2, Vibrate } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditNameDialog } from "./EditNameDialog";
 import { getPlayerName, updatePlayerName, deletePlayer } from "@/lib/playerStorage";
+import { isHapticEnabled, setHapticEnabled, triggerHaptic } from "@/lib/haptics";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 interface SettingsDialogProps {
@@ -33,6 +35,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
   const [showEditName, setShowEditName] = useState(false);
   const [currentName, setCurrentName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hapticEnabled, setHapticEnabledState] = useState(isHapticEnabled());
 
   useEffect(() => {
     if (open) {
@@ -50,6 +53,15 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
     await updatePlayerName(newName);
     setCurrentName(newName);
     onNameChange?.(newName);
+  };
+
+  const handleHapticToggle = (enabled: boolean) => {
+    setHapticEnabled(enabled);
+    setHapticEnabledState(enabled);
+    if (enabled) {
+      // Demo vibration when enabling
+      triggerHaptic(20);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -82,6 +94,18 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
             <DialogTitle className="text-center text-xl">⚙️ הגדרות</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-3">
+            {/* Haptic toggle */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+              <div className="flex items-center gap-3">
+                <Vibrate className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium">רטט בלחיצה</span>
+              </div>
+              <Switch 
+                checked={hapticEnabled}
+                onCheckedChange={handleHapticToggle}
+              />
+            </div>
+            
             {/* Change name button */}
             <button
               onClick={() => setShowEditName(true)}
