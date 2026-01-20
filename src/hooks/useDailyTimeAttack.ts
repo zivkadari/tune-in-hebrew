@@ -482,7 +482,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   }, [dailySet, currentSongIndex, endRunInternal]);
 
   /**
-   * Check if answer is correct via server API
+   * Check if answer is correct using local hash verification (no server call!)
    */
   const checkAnswer = useCallback(async (currentSlots: Slot[], userGuess: string) => {
     if (!currentSong || isCheckingRef.current) return;
@@ -490,40 +490,32 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     isCheckingRef.current = true;
     
     try {
-      // Call verify-answer API
-      const { data, error } = await supabase.functions.invoke('verify-answer', {
-        body: {
-          song_id: currentSong.id,
-          guess: userGuess,
-          encrypted_answer: currentSong.encrypted_answer,
-        },
-      });
+      // Compute SHA-256 hash of the guess (without spaces)
+      const guessWithoutSpaces = userGuess.replace(/\s/g, '');
+      const hashBuffer = await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(guessWithoutSpaces)
+      );
+      const guessHash = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
       
-      if (error) {
-        console.error('Error verifying answer:', error);
-        setSlotState('wrong');
-        setMessage('שגיאה בבדיקה');
-        setMessageType('error');
-        setTimeout(() => {
-          setMessage(null);
-          setMessageType(null);
-          setSlotState('normal');
-        }, 500);
-        return;
-      }
+      // Local comparison - no server roundtrip!
+      const isCorrect = guessHash === currentSong.answer_hash;
       
-      if (data.correct) {
+      if (isCorrect) {
         // CORRECT!
         setSlotState('correct');
         setCorrectCount(prev => prev + 1);
         setMessage('נכון! ✅');
         setMessageType('success');
         
+        // Reduced delay from 500ms to 250ms for snappier UX
         setTimeout(() => {
           setMessage(null);
           setMessageType(null);
           advanceToNextSong();
-        }, 500);
+        }, 250);
       } else {
         // WRONG!
         setSlotState('wrong');
@@ -537,7 +529,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
           setSlots(prev => prev.map(s => s.isSpace ? s : { ...s, letter: null, bubbleId: null }));
           setBubbles(prev => prev.map(b => ({ ...b, isUsed: false })));
           setSlotState('normal');
-        }, 500);
+        }, 250);
       }
     } finally {
       isCheckingRef.current = false;
