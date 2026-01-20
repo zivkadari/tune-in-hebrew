@@ -284,9 +284,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     const pid = getPlayerId();
     if (!pid || !dailySet || !runType) return;
     
-    // Save run to database
+    // Save run via edge function (validates player ownership)
     const runData = {
-      player_id: pid,
       date: dailySet.date,
       run_type: runType,
       correct_count: correctCount,
@@ -298,28 +297,34 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     };
     
     try {
-      const { data, error } = await supabase
-        .from('daily_time_attack_runs')
-        .insert(runData)
-        .select()
-        .single();
+      const { data, error } = await supabase.functions.invoke('save-run', {
+        body: runData,
+        headers: {
+          'x-player-id': pid,
+        },
+      });
       
       if (error) {
+        console.error('Error saving run:', error);
+        toast.error('שגיאה בשמירת התוצאה');
+        return;
+      }
+      
+      if (data?.error) {
         // Might be duplicate official run
-        if (error.code === '23505') {
+        if (data.error.includes('already exists')) {
           toast.error('כבר שיחקת ריצה רשמית היום');
         } else {
-          console.error('Error saving run:', error);
-          toast.error('שגיאה בשמירת התוצאה');
+          toast.error(data.error);
         }
         return;
       }
       
-      setRunResult(data as DailyRun);
+      setRunResult(data.run as DailyRun);
       
       if (runType === 'official') {
         setHasPlayedOfficialToday(true);
-        setTodayOfficialRun(data as DailyRun);
+        setTodayOfficialRun(data.run as DailyRun);
       }
       
       // Fetch leaderboard

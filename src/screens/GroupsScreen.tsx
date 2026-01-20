@@ -69,31 +69,32 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
   const joinGroup = async () => {
     if (!playerId || !joinCode.trim()) return;
     
-    const { data: group, error: findError } = await supabase
-      .from('groups')
-      .select('id, name')
-      .eq('join_code', joinCode.trim().toUpperCase())
-      .single();
+    // Use edge function to join group (validates player ownership)
+    const { data, error } = await supabase.functions.invoke('join-group', {
+      body: { join_code: joinCode.trim() },
+      headers: {
+        'x-player-id': playerId,
+      },
+    });
     
-    if (findError || !group) {
-      toast.error('קוד קבוצה לא נמצא');
+    if (error) {
+      console.error('Error joining group:', error);
+      toast.error('שגיאה בהצטרפות');
       return;
     }
     
-    const { error: joinError } = await supabase
-      .from('group_members')
-      .insert({ group_id: group.id, player_id: playerId });
-    
-    if (joinError) {
-      if (joinError.code === '23505') {
+    if (data?.error) {
+      if (data.error.includes('Already a member')) {
         toast.error('כבר בקבוצה הזו');
+      } else if (data.error.includes('not found')) {
+        toast.error('קוד קבוצה לא נמצא');
       } else {
-        toast.error('שגיאה בהצטרפות');
+        toast.error(data.error);
       }
       return;
     }
     
-    toast.success(`הצטרפת לקבוצה "${group.name}"! 🎉`);
+    toast.success(`הצטרפת לקבוצה "${data.group?.name}"! 🎉`);
     setJoinCode('');
     setShowJoinForm(false);
     fetchMyGroups();
