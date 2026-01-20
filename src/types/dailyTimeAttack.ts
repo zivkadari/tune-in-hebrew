@@ -77,6 +77,14 @@ export type DailyScreen =
   | 'groups' 
   | 'group-detail'
   | 'group-leaderboard'
-  | 'leaderboard';
+  | 'leaderboard'
+  | 'enhanced-leaderboard';
 
 export type MessageType = 'success' | 'error' | 'warning' | null;
+
+export interface GroupMemberDetail {
+  player_id: string;
+  display_name: string;
+  joined_at: string;
+  is_creator: boolean;
+}

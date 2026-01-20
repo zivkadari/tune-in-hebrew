@@ -12,6 +12,8 @@ import { DailyTimeAttackRun } from "@/screens/DailyTimeAttackRun";
 import { DailyTimeAttackResults } from "@/screens/DailyTimeAttackResults";
 import { DailyLeaderboardScreen } from "@/screens/DailyLeaderboardScreen";
 import { GroupsScreen } from "@/screens/GroupsScreen";
+import { GroupDetailScreen } from "@/screens/GroupDetailScreen";
+import { EnhancedLeaderboardScreen } from "@/screens/EnhancedLeaderboardScreen";
 import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
 import { WelcomeNameDialog } from "@/components/WelcomeNameDialog";
 import type { DailyScreen } from "@/types/dailyTimeAttack";
@@ -69,6 +71,7 @@ const Index = () => {
 
   // Daily Time Attack state
   const [dailyScreen, setDailyScreen] = useState<DailyScreen | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showPracticeWarning, setShowPracticeWarning] = useState(false);
   
   const daily = useDailyTimeAttack();
@@ -204,13 +207,11 @@ const Index = () => {
     );
   }
 
-  if (dailyScreen === 'leaderboard') {
+  if (dailyScreen === 'leaderboard' || dailyScreen === 'enhanced-leaderboard') {
     return (
-      <DailyLeaderboardScreen
-        isLoading={daily.isLoading}
-        leaderboard={daily.globalLeaderboard}
+      <EnhancedLeaderboardScreen
+        dailyLeaderboard={daily.globalLeaderboard}
         onBack={() => setDailyScreen('daily-home')}
-        onRefresh={() => daily.fetchLeaderboard()}
       />
     );
   }
@@ -273,7 +274,22 @@ const Index = () => {
 
   if (dailyScreen === 'groups') {
     return (
-      <GroupsScreen onBack={() => setDailyScreen('daily-home')} />
+      <GroupsScreen 
+        onBack={() => setDailyScreen('daily-home')} 
+        onGroupClick={(groupId) => {
+          setSelectedGroupId(groupId);
+          setDailyScreen('group-detail');
+        }}
+      />
+    );
+  }
+
+  if (dailyScreen === 'group-detail' && selectedGroupId) {
+    return (
+      <GroupDetailScreen
+        groupId={selectedGroupId}
+        onBack={() => setDailyScreen('groups')}
+      />
     );
   }
 

@@ -8,9 +8,10 @@ import type { Group } from '@/types/dailyTimeAttack';
 
 interface GroupsScreenProps {
   onBack: () => void;
+  onGroupClick: (groupId: string) => void;
 }
 
-export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
+export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack, onGroupClick }) => {
   const { safeAreaTop } = useDeviceType();
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -222,18 +223,26 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
       ) : (
         <div className="space-y-3">
           {groups.map((group) => (
-            <div key={group.id} className="glass-card p-4 flex justify-between items-center">
-              <div>
+            <button 
+              key={group.id} 
+              onClick={() => onGroupClick(group.id)}
+              className="glass-card p-4 flex justify-between items-center w-full text-right hover:bg-muted/30 transition-colors"
+            >
+              <div className="flex-1">
                 <h3 className="font-bold">{group.name}</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>קוד:</span>
                   <code className="font-mono bg-muted px-2 py-0.5 rounded">{group.join_code}</code>
-                  <button onClick={() => copyCode(group.join_code)} className="p-1 hover:text-foreground">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); copyCode(group.join_code); }} 
+                    className="p-1 hover:text-foreground"
+                  >
                     {copiedCode === group.join_code ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-            </div>
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
           ))}
         </div>
       )}
