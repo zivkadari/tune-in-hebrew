@@ -1,0 +1,149 @@
+import React from 'react';
+import { Home, Calendar, SkipForward } from 'lucide-react';
+import { DailyTimer } from '@/components/DailyTimer';
+import { Piano } from '@/components/Piano';
+import { PlayButton } from '@/components/PlayButton';
+import { LetterSlots } from '@/components/LetterSlots';
+import { LetterBubbles } from '@/components/LetterBubbles';
+import type { DailySong, Slot, Bubble, SlotState, RunType } from '@/types/dailyTimeAttack';
+import { cn } from '@/lib/utils';
+
+interface DailyTimeAttackRunProps {
+  runType: RunType;
+  currentSongIndex: number;
+  totalSongs: number;
+  timeLeftMs: number;
+  correctCount: number;
+  skipUsed: boolean;
+  yearHintUsed: boolean;
+  currentSong: DailySong | null;
+  slots: Slot[];
+  bubbles: Bubble[];
+  slotState: SlotState;
+  isPlaying: boolean;
+  activePianoKeys: number[];
+  audioProgress: number;
+  onBubbleClick: (bubbleId: number) => void;
+  onSlotClick: (slotId: number) => void;
+  onSkip: () => void;
+  onYearHint: () => void;
+  onTogglePlay: () => void;
+  onQuit: () => void;
+}
+
+export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
+  runType,
+  currentSongIndex,
+  totalSongs,
+  timeLeftMs,
+  correctCount,
+  skipUsed,
+  yearHintUsed,
+  currentSong,
+  slots,
+  bubbles,
+  slotState,
+  isPlaying,
+  activePianoKeys,
+  audioProgress,
+  onBubbleClick,
+  onSlotClick,
+  onSkip,
+  onYearHint,
+  onTogglePlay,
+  onQuit
+}) => {
+  const questionText = currentSong?.type === 'artist' 
+    ? '🎤 נחש/י את שם האמן'
+    : '🎵 נחש/י את שם השיר';
+
+  return (
+    <div className="min-h-screen flex flex-col p-4 safe-area-top safe-area-bottom">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <button 
+          onClick={onQuit}
+          className="p-2 rounded-full glass-card hover:bg-destructive/20 transition-colors"
+        >
+          <Home className="w-5 h-5" />
+        </button>
+        
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">
+            {runType === 'practice' && '🏋️ אימון'}
+          </span>
+          <span className="text-lg font-bold">
+            פתרת: {correctCount}/{totalSongs}
+          </span>
+        </div>
+      </div>
+
+      {/* Timer */}
+      <div className="flex justify-center mb-6">
+        <DailyTimer timeLeftMs={timeLeftMs} />
+      </div>
+
+      {/* Piano */}
+      <div className="flex justify-center mb-4">
+        <Piano activeKeys={activePianoKeys} progress={audioProgress} />
+      </div>
+
+      {/* Play Button */}
+      <div className="flex justify-center mb-4">
+        <PlayButton isPlaying={isPlaying} onClick={onTogglePlay} />
+      </div>
+
+      {/* Question */}
+      <p className="text-center text-lg font-medium mb-4">{questionText}</p>
+
+      {/* Letter Slots */}
+      <div className="flex justify-center mb-4">
+        <LetterSlots 
+          slots={slots} 
+          onSlotClick={onSlotClick}
+          className={cn(
+            "transition-all duration-300",
+            slotState === 'correct' && "ring-2 ring-green-500 bg-green-500/10 rounded-lg",
+            slotState === 'wrong' && "ring-2 ring-red-500 bg-red-500/10 rounded-lg animate-shake"
+          )}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-3 mb-6">
+        <button
+          onClick={onYearHint}
+          disabled={yearHintUsed}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-full transition-all",
+            yearHintUsed 
+              ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed"
+              : "glass-card hover:bg-muted/50"
+          )}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>שנה ({yearHintUsed ? '0' : '1'})</span>
+        </button>
+        
+        <button
+          onClick={onSkip}
+          disabled={skipUsed}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-full transition-all",
+            skipUsed 
+              ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed"
+              : "glass-card hover:bg-muted/50"
+          )}
+        >
+          <SkipForward className="w-4 h-4" />
+          <span>דלג ({skipUsed ? '0' : '1'})</span>
+        </button>
+      </div>
+
+      {/* Letter Bubbles */}
+      <div className="flex-1 flex items-end pb-4">
+        <LetterBubbles bubbles={bubbles} onBubbleClick={onBubbleClick} />
+      </div>
+    </div>
+  );
+};
