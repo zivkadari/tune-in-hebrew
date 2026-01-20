@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, Play, RotateCcw, Trophy, Users, Home, CheckCircle, Dumbbell } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Play, Trophy, Users, Home, CheckCircle, Dumbbell } from 'lucide-react';
 import { PracticeWarningDialog } from '@/components/PracticeWarningDialog';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import type { RunType } from '@/types/dailyTimeAttack';
 
 interface DailyTimeAttackHomeProps {
@@ -20,6 +21,7 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
   onGroups,
   onBack
 }) => {
+  const { safeAreaTop } = useDeviceType();
   const [showPracticeWarning, setShowPracticeWarning] = useState(false);
 
   const handlePracticeClick = () => {
@@ -50,7 +52,8 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
       {/* Back button */}
       <button 
         onClick={onBack}
-        className="absolute top-6 left-6 safe-area-top p-2 rounded-full glass-card hover:bg-muted/50 transition-colors"
+        className="absolute left-6 p-2 rounded-full glass-card hover:bg-muted/50 transition-colors"
+        style={{ top: `${Math.max(safeAreaTop + 8, 48)}px` }}
       >
         <Home className="w-5 h-5" />
       </button>

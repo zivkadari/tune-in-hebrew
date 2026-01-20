@@ -5,6 +5,7 @@ import { Piano } from '@/components/Piano';
 import { PlayButton } from '@/components/PlayButton';
 import { DailyLetterSlots } from '@/components/DailyLetterSlots';
 import { DailyLetterBubbles } from '@/components/DailyLetterBubbles';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import type { DailySong, Slot, Bubble, SlotState, RunType } from '@/types/dailyTimeAttack';
 import { cn } from '@/lib/utils';
 
@@ -49,12 +50,17 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
   onTogglePlay,
   onQuit
 }) => {
+  const { safeAreaTop } = useDeviceType();
+  
   const questionText = currentSong?.type === 'artist' 
     ? '🎤 נחש/י את שם האמן'
     : '🎵 נחש/י את שם השיר';
 
   return (
-    <div className="min-h-screen flex flex-col p-4 safe-area-top safe-area-bottom">
+    <div 
+      className="min-h-screen flex flex-col p-4 safe-area-bottom"
+      style={{ paddingTop: `${Math.max(safeAreaTop + 8, 48)}px` }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <button 
