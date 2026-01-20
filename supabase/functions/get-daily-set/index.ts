@@ -9,6 +9,7 @@ interface DailySong {
   id: number;
   type: 'song' | 'artist';
   encrypted_answer: string;
+  answer_hash: string; // SHA-256 hash for local verification
   audio_url: string;
   release_year: number;
   answer_pattern: number[]; // Length of each word
@@ -241,10 +242,21 @@ Deno.serve(async (req: Request) => {
         const fakeLetters = generateFakeLetters(fakeCount, answerLetters);
         const shuffledLetters = shuffleArray([...answerLetters, ...fakeLetters]);
         
+        // Create SHA-256 hash of answer (without spaces) for local verification
+        const answerWithoutSpaces = song.answer.replace(/\s/g, '');
+        const hashBuffer = await crypto.subtle.digest(
+          'SHA-256',
+          new TextEncoder().encode(answerWithoutSpaces)
+        );
+        const answerHash = Array.from(new Uint8Array(hashBuffer))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+        
         orderedSongs.push({
           id: song.id,
           type: song.type,
           encrypted_answer: encryptedAnswer,
+          answer_hash: answerHash,
           audio_url: song.audio_url,
           release_year: song.release_year,
           answer_pattern: answerPattern,

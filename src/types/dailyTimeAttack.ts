@@ -1,11 +1,12 @@
 export interface DailySong {
   id: number;
   type: 'song' | 'artist';
-  encrypted_answer: string; // Server-encrypted answer - client cannot decrypt
+  encrypted_answer: string;   // Server-encrypted answer - client cannot decrypt
+  answer_hash: string;        // SHA-256 hash for local verification
   audio_url: string;
   release_year: number;
-  answer_pattern: number[]; // Length of each word, e.g., [3, 6] for "אגם בוחבוט"
-  answer_length: number;    // Total letters (excluding spaces)
+  answer_pattern: number[];   // Length of each word, e.g., [3, 6] for "אגם בוחבוט"
+  answer_length: number;      // Total letters (excluding spaces)
   shuffled_letters: string[]; // Real answer letters + fake letters, shuffled
 }
 
