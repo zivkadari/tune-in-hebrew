@@ -11,41 +11,35 @@ export interface Player {
 
 /**
  * Get the player ID from localStorage, or create a new anonymous player
+ * Uses secure edge function for player creation
  */
 export const getOrCreatePlayerId = async (): Promise<string> => {
   let playerId = localStorage.getItem(PLAYER_ID_KEY);
   
   if (playerId) {
-    // Verify the player still exists in DB
-    const { data } = await supabase
-      .from('players')
-      .select('id')
-      .eq('id', playerId)
-      .single();
-    
-    if (data) {
-      return playerId;
-    }
-    // Player was deleted, clear localStorage
-    localStorage.removeItem(PLAYER_ID_KEY);
-    localStorage.removeItem(PLAYER_NAME_KEY);
+    // We can't verify via direct DB call anymore (RLS blocks it)
+    // Just trust localStorage for existing players
+    return playerId;
   }
   
-  // Create new player
-  const { data, error } = await supabase
-    .from('players')
-    .insert({})
-    .select('id, display_name')
-    .single();
+  // Create new player via secure edge function
+  const { data, error } = await supabase.functions.invoke('create-player', {
+    body: {},
+  });
   
   if (error) {
     console.error('Error creating player:', error);
     throw new Error('Failed to create player');
   }
   
-  playerId = data.id;
+  if (data?.error) {
+    console.error('Error creating player:', data.error);
+    throw new Error(data.error);
+  }
+  
+  playerId = data.player.id;
   localStorage.setItem(PLAYER_ID_KEY, playerId);
-  localStorage.setItem(PLAYER_NAME_KEY, data.display_name);
+  localStorage.setItem(PLAYER_NAME_KEY, data.player.display_name);
   
   return playerId;
 };
@@ -58,26 +52,12 @@ export const getPlayerId = (): string | null => {
 };
 
 /**
- * Get the player's display name
+ * Get the player's display name from localStorage
+ * We no longer fetch from DB due to RLS restrictions
  */
 export const getPlayerName = async (): Promise<string> => {
-  const playerId = getPlayerId();
-  if (!playerId) return 'שחקן אנונימי';
-  
   const cached = localStorage.getItem(PLAYER_NAME_KEY);
   if (cached) return cached;
-  
-  const { data } = await supabase
-    .from('players')
-    .select('display_name')
-    .eq('id', playerId)
-    .single();
-  
-  if (data) {
-    localStorage.setItem(PLAYER_NAME_KEY, data.display_name);
-    return data.display_name;
-  }
-  
   return 'שחקן אנונימי';
 };
 
@@ -109,17 +89,18 @@ export const updatePlayerName = async (newName: string): Promise<void> => {
 };
 
 /**
- * Get the full player data
+ * Get the full player data from localStorage
+ * We no longer fetch from DB due to RLS restrictions
  */
 export const getPlayer = async (): Promise<Player | null> => {
   const playerId = getPlayerId();
   if (!playerId) return null;
   
-  const { data } = await supabase
-    .from('players')
-    .select('*')
-    .eq('id', playerId)
-    .single();
+  const displayName = localStorage.getItem(PLAYER_NAME_KEY) || 'שחקן אנונימי';
   
-  return data;
+  return {
+    id: playerId,
+    display_name: displayName,
+    created_at: new Date().toISOString() // Approximate
+  };
 };

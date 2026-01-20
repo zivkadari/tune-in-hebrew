@@ -28,15 +28,21 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
     if (!playerId) return;
     
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('group_members')
-      .select('group_id, groups(*)')
-      .eq('player_id', playerId);
+    
+    // Use secure edge function to fetch groups
+    const { data, error } = await supabase.functions.invoke('get-my-groups', {
+      headers: {
+        'x-player-id': playerId,
+      },
+    });
     
     if (error) {
       console.error('Error fetching groups:', error);
+      toast.error('שגיאה בטעינת הקבוצות');
+    } else if (data?.error) {
+      console.error('Error fetching groups:', data.error);
     } else {
-      setGroups((data || []).map((d: any) => d.groups).filter(Boolean));
+      setGroups(data?.groups || []);
     }
     setIsLoading(false);
   };
@@ -44,27 +50,26 @@ export const GroupsScreen: React.FC<GroupsScreenProps> = ({ onBack }) => {
   const createGroup = async () => {
     if (!playerId || !newGroupName.trim()) return;
     
-    // First create the group
-    const { data: groupData, error: groupError } = await supabase
-      .from('groups')
-      .insert({ name: newGroupName.trim(), created_by: playerId })
-      .select()
-      .single();
+    // Use secure edge function to create group
+    const { data, error } = await supabase.functions.invoke('create-group', {
+      body: { name: newGroupName.trim() },
+      headers: {
+        'x-player-id': playerId,
+      },
+    });
     
-    if (groupError) {
-      console.error('Error creating group:', groupError);
+    if (error) {
+      console.error('Error creating group:', error);
       toast.error('שגיאה ביצירת קבוצה');
       return;
     }
     
-    // Then auto-join the created group
-    const { error: joinError } = await supabase
-      .from('group_members')
-      .insert({ group_id: groupData.id, player_id: playerId });
+    if (data?.error) {
+      toast.error(data.error);
+      return;
+    }
     
-    if (joinError) {
-      console.error('Error joining group:', joinError);
-      // Group was created but couldn't join - still show success but warn
+    if (data?.warning) {
       toast.warning('הקבוצה נוצרה אך לא הצלחת להצטרף אוטומטית');
     } else {
       toast.success('הקבוצה נוצרה! 🎉');

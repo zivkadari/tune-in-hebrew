@@ -203,7 +203,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      daily_songs_public: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          id: number | null
+          is_active: boolean | null
+          pool_order: number | null
+          release_year: number | null
+          type: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          pool_order?: number | null
+          release_year?: number | null
+          type?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          pool_order?: number | null
+          release_year?: number | null
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_group_member: {

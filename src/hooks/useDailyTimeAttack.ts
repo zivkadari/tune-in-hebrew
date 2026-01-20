@@ -343,47 +343,44 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   }, [endRunInternal]);
 
   /**
-   * Fetch global leaderboard for today
+   * Fetch global leaderboard for today via secure edge function
    */
   const fetchLeaderboard = useCallback(async () => {
     if (!dailySet) return;
     
     const pid = getPlayerId();
     
-    // Get top 10 + current player
-    const { data: runs, error } = await supabase
-      .from('daily_time_attack_runs')
-      .select(`
-        player_id,
-        correct_count,
-        effective_ms,
-        created_at,
-        players!inner(display_name)
-      `)
-      .eq('date', dailySet.date)
-      .eq('run_type', 'official')
-      .order('correct_count', { ascending: false })
-      .order('effective_ms', { ascending: true })
-      .order('created_at', { ascending: true })
-      .limit(50);
+    // Use secure edge function for leaderboard
+    const { data, error } = await supabase.functions.invoke('get-leaderboard', {
+      headers: pid ? { 'x-player-id': pid } : {},
+      body: null,
+    });
     
-    if (error) {
-      console.error('Error fetching leaderboard:', error);
+    // Parse URL to add query param (edge function uses GET)
+    const url = new URL(`${import.meta.env.VITE_SUPABASE_URL || 'https://nltdspmkogjsnnywqzke.supabase.co'}/functions/v1/get-leaderboard`);
+    url.searchParams.set('date', dailySet.date);
+    
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-player-id': pid || '',
+      },
+    });
+    
+    if (!response.ok) {
+      console.error('Error fetching leaderboard:', response.statusText);
       return;
     }
     
-    // Transform to LeaderboardEntry
-    const entries: LeaderboardEntry[] = (runs || []).map((run: any, idx: number) => ({
-      rank: idx + 1,
-      player_id: run.player_id,
-      display_name: run.players?.display_name || 'שחקן אנונימי',
-      correct_count: run.correct_count,
-      effective_ms: run.effective_ms,
-      created_at: run.created_at,
-      is_current_player: run.player_id === pid
-    }));
+    const result = await response.json();
     
-    setGlobalLeaderboard(entries);
+    if (result.error) {
+      console.error('Error fetching leaderboard:', result.error);
+      return;
+    }
+    
+    setGlobalLeaderboard(result.leaderboard || []);
   }, [dailySet]);
 
   /**
