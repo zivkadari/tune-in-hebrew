@@ -1,11 +1,20 @@
+import { useState, useEffect, useCallback } from "react";
 import { useGameState } from "@/hooks/useGameState";
+import { useDailyTimeAttack } from "@/hooks/useDailyTimeAttack";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LevelScreen } from "@/screens/LevelScreen";
 import { SuccessScreen } from "@/screens/SuccessScreen";
 import { LevelsScreen } from "@/screens/LevelsScreen";
 import { NewGameNoticeDialog } from "@/components/NewGameNoticeDialog";
+import { DailyTimeAttackHome } from "@/screens/DailyTimeAttackHome";
+import { DailyTimeAttackRun } from "@/screens/DailyTimeAttackRun";
+import { DailyTimeAttackResults } from "@/screens/DailyTimeAttackResults";
+import { GroupsScreen } from "@/screens/GroupsScreen";
+import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
+import type { DailyScreen } from "@/types/dailyTimeAttack";
 
 const Index = () => {
+  // Campaign mode state
   const {
     screen,
     gameState,
@@ -47,6 +56,127 @@ const Index = () => {
     hasFakeBubbles,
   } = useGameState();
 
+  // Daily Time Attack state
+  const [dailyScreen, setDailyScreen] = useState<DailyScreen | null>(null);
+  const [showPracticeWarning, setShowPracticeWarning] = useState(false);
+  
+  const daily = useDailyTimeAttack();
+
+  // Initialize daily mode when entering
+  useEffect(() => {
+    if (dailyScreen === 'daily-home' && !daily.dailySet) {
+      daily.initialize();
+    }
+  }, [dailyScreen, daily.dailySet, daily.initialize]);
+
+  // Handle entering Daily Time Attack mode
+  const handleOpenTimeAttack = useCallback(() => {
+    setDailyScreen('daily-home');
+    daily.initialize();
+  }, [daily]);
+
+  // Handle starting a run
+  const handleStartDailyRun = useCallback((type: 'official' | 'practice') => {
+    daily.startRun(type);
+    setDailyScreen('daily-run');
+  }, [daily]);
+
+  // Handle practice with warning
+  const handleTryAgainPractice = useCallback(() => {
+    setShowPracticeWarning(true);
+  }, []);
+
+  const handleConfirmPractice = useCallback(() => {
+    setShowPracticeWarning(false);
+    daily.resetForNewRun();
+    handleStartDailyRun('practice');
+  }, [daily, handleStartDailyRun]);
+
+  // Handle quitting a run
+  const handleQuitDailyRun = useCallback(() => {
+    daily.endRun();
+    setDailyScreen('daily-home');
+  }, [daily]);
+
+  // Handle going back to campaign home
+  const handleBackFromDaily = useCallback(() => {
+    setDailyScreen(null);
+  }, []);
+
+  // Effect to show results when run ends
+  useEffect(() => {
+    if (daily.runResult && dailyScreen === 'daily-run') {
+      setDailyScreen('daily-results');
+    }
+  }, [daily.runResult, dailyScreen]);
+
+  // Daily Time Attack screens
+  if (dailyScreen === 'daily-home') {
+    return (
+      <DailyTimeAttackHome
+        isLoading={daily.isLoading}
+        hasPlayedOfficialToday={daily.hasPlayedOfficialToday}
+        onStartRun={handleStartDailyRun}
+        onLeaderboard={() => {
+          // For now, just show a toast - could expand to a dedicated screen
+          daily.initialize();
+        }}
+        onGroups={() => setDailyScreen('groups')}
+        onBack={handleBackFromDaily}
+      />
+    );
+  }
+
+  if (dailyScreen === 'daily-run' && daily.isRunning) {
+    return (
+      <DailyTimeAttackRun
+        runType={daily.runType!}
+        totalSongs={12}
+        timeLeftMs={daily.timeLeftMs}
+        correctCount={daily.correctCount}
+        skipUsed={daily.skipUsed}
+        yearHintUsed={daily.yearHintUsed}
+        currentSong={daily.currentSong}
+        slots={daily.slots}
+        bubbles={daily.bubbles}
+        slotState={daily.slotState}
+        isPlaying={daily.isPlaying}
+        activePianoKeys={daily.activePianoKeys}
+        onBubbleClick={daily.onBubbleClick}
+        onSlotClick={daily.onSlotClick}
+        onSkip={daily.useSkip}
+        onYearHint={daily.useYearHint}
+        onTogglePlay={daily.togglePlay}
+        onQuit={handleQuitDailyRun}
+      />
+    );
+  }
+
+  if (dailyScreen === 'daily-results' && daily.runResult) {
+    return (
+      <>
+        <DailyTimeAttackResults
+          runResult={daily.runResult}
+          globalLeaderboard={daily.globalLeaderboard}
+          onTryAgain={handleTryAgainPractice}
+          onHome={() => setDailyScreen('daily-home')}
+        />
+        <PracticeWarningDialog
+          open={showPracticeWarning}
+          onOpenChange={setShowPracticeWarning}
+          onConfirm={handleConfirmPractice}
+        />
+      </>
+    );
+  }
+
+  if (dailyScreen === 'groups') {
+    return (
+      <GroupsScreen onBack={() => setDailyScreen('daily-home')} />
+    );
+  }
+
+  // Campaign mode screens
   if (screen === "home") {
     return (
       <>
@@ -58,6 +188,7 @@ const Index = () => {
           onRestart={restartGame}
           onLevels={openLevelsScreen}
           onFullReset={fullReset}
+          onTimeAttack={handleOpenTimeAttack}
         />
         <NewGameNoticeDialog
           open={showNewGameNotice}

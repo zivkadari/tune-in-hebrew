@@ -3,14 +3,13 @@ import { Home, Calendar, SkipForward } from 'lucide-react';
 import { DailyTimer } from '@/components/DailyTimer';
 import { Piano } from '@/components/Piano';
 import { PlayButton } from '@/components/PlayButton';
-import { LetterSlots } from '@/components/LetterSlots';
-import { LetterBubbles } from '@/components/LetterBubbles';
+import { DailyLetterSlots } from '@/components/DailyLetterSlots';
+import { DailyLetterBubbles } from '@/components/DailyLetterBubbles';
 import type { DailySong, Slot, Bubble, SlotState, RunType } from '@/types/dailyTimeAttack';
 import { cn } from '@/lib/utils';
 
 interface DailyTimeAttackRunProps {
   runType: RunType;
-  currentSongIndex: number;
   totalSongs: number;
   timeLeftMs: number;
   correctCount: number;
@@ -22,7 +21,6 @@ interface DailyTimeAttackRunProps {
   slotState: SlotState;
   isPlaying: boolean;
   activePianoKeys: number[];
-  audioProgress: number;
   onBubbleClick: (bubbleId: number) => void;
   onSlotClick: (slotId: number) => void;
   onSkip: () => void;
@@ -33,7 +31,6 @@ interface DailyTimeAttackRunProps {
 
 export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
   runType,
-  currentSongIndex,
   totalSongs,
   timeLeftMs,
   correctCount,
@@ -45,7 +42,6 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
   slotState,
   isPlaying,
   activePianoKeys,
-  audioProgress,
   onBubbleClick,
   onSlotClick,
   onSkip,
@@ -85,12 +81,12 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
 
       {/* Piano */}
       <div className="flex justify-center mb-4">
-        <Piano activeKeys={activePianoKeys} progress={audioProgress} />
+        <Piano activeKeys={activePianoKeys} />
       </div>
 
       {/* Play Button */}
       <div className="flex justify-center mb-4">
-        <PlayButton isPlaying={isPlaying} onClick={onTogglePlay} />
+        <PlayButton isPlaying={isPlaying} onPlay={onTogglePlay} />
       </div>
 
       {/* Question */}
@@ -98,13 +94,13 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
 
       {/* Letter Slots */}
       <div className="flex justify-center mb-4">
-        <LetterSlots 
+        <DailyLetterSlots 
           slots={slots} 
           onSlotClick={onSlotClick}
           className={cn(
-            "transition-all duration-300",
-            slotState === 'correct' && "ring-2 ring-green-500 bg-green-500/10 rounded-lg",
-            slotState === 'wrong' && "ring-2 ring-red-500 bg-red-500/10 rounded-lg animate-shake"
+            "transition-all duration-300 p-2 rounded-lg",
+            slotState === 'correct' && "ring-2 ring-green-500 bg-green-500/10",
+            slotState === 'wrong' && "ring-2 ring-red-500 bg-red-500/10 animate-shake"
           )}
         />
       </div>
@@ -142,7 +138,7 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
 
       {/* Letter Bubbles */}
       <div className="flex-1 flex items-end pb-4">
-        <LetterBubbles bubbles={bubbles} onBubbleClick={onBubbleClick} />
+        <DailyLetterBubbles bubbles={bubbles} onBubbleClick={onBubbleClick} />
       </div>
     </div>
   );
