@@ -6,6 +6,7 @@ import { PlayButton } from '@/components/PlayButton';
 import { DailyLetterSlots } from '@/components/DailyLetterSlots';
 import { DailyLetterBubbles } from '@/components/DailyLetterBubbles';
 import { MessageDisplay } from '@/components/MessageDisplay';
+import { CountdownOverlay } from '@/components/CountdownOverlay';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import type { DailySong, Slot, Bubble, SlotState, RunType, MessageType } from '@/types/dailyTimeAttack';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,8 @@ interface DailyTimeAttackRunProps {
   activePianoKeys: number[];
   message: string | null;
   messageType: MessageType;
+  isCountingDown: boolean;
+  countdownSeconds: number;
   onBubbleClick: (bubbleId: number) => void;
   onSlotClick: (slotId: number) => void;
   onSkip: () => void;
@@ -48,6 +51,8 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
   activePianoKeys,
   message,
   messageType,
+  isCountingDown,
+  countdownSeconds,
   onBubbleClick,
   onSlotClick,
   onSkip,
@@ -61,11 +66,16 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
     ? '🎤 נחש/י את שם האמן'
     : '🎵 נחש/י את שם השיר';
 
+  // Disable interactions during countdown
+  const isDisabled = isCountingDown;
+
   return (
     <div 
       className="min-h-screen flex flex-col p-4 safe-area-bottom"
       style={{ paddingTop: `${Math.max(safeAreaTop + 8, 48)}px` }}
     >
+      {/* Countdown Overlay */}
+      {isCountingDown && <CountdownOverlay seconds={countdownSeconds} />}
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <button 
@@ -97,7 +107,7 @@ export const DailyTimeAttackRun: React.FC<DailyTimeAttackRunProps> = ({
 
       {/* Play Button */}
       <div className="flex justify-center mb-4">
-        <PlayButton isPlaying={isPlaying} onPlay={onTogglePlay} />
+        <PlayButton isPlaying={isPlaying} onPlay={onTogglePlay} disabled={isDisabled} />
       </div>
 
       {/* Question */}

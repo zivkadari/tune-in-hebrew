@@ -40,6 +40,10 @@ interface UseDailyTimeAttackReturn {
   skipUsed: boolean;
   yearHintUsed: boolean;
   
+  // Countdown state
+  isCountingDown: boolean;
+  countdownSeconds: number;
+  
   // Current song UI
   currentSong: DailySong | null;
   slots: Slot[];
@@ -154,6 +158,10 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const [skipUsed, setSkipUsed] = useState(false);
   const [yearHintUsed, setYearHintUsed] = useState(false);
   
+  // Countdown state
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [countdownSeconds, setCountdownSeconds] = useState(3);
+  
   // UI state
   const [slots, setSlots] = useState<Slot[]>([]);
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
@@ -172,6 +180,7 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   
   // Refs for timer-safe values (prevents stale closures)
   const timerRef = useRef<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const correctCountRef = useRef(0);
@@ -254,6 +263,16 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       return;
     }
     
+    // Clear any existing timers
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
     // Reset game state and refs immediately
     setRunType(type);
     runTypeRef.current = type;
@@ -279,20 +298,38 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     setSlots(newSlots);
     setBubbles(newBubbles);
     
-    // Start timer
-    startTimeRef.current = Date.now();
+    // Start 3-second countdown
+    setIsCountingDown(true);
+    setCountdownSeconds(3);
     setIsRunning(true);
     
-    timerRef.current = window.setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
-      const remaining = Math.max(0, GAME_DURATION_MS - elapsed);
-      setTimeLeftMs(remaining);
+    let count = 3;
+    countdownTimerRef.current = window.setInterval(() => {
+      count--;
+      setCountdownSeconds(count);
       
-      if (remaining <= 0) {
-        // Time's up!
-        endRunInternal();
+      if (count <= 0) {
+        // Countdown finished - start the real game timer
+        if (countdownTimerRef.current) {
+          clearInterval(countdownTimerRef.current);
+          countdownTimerRef.current = null;
+        }
+        setIsCountingDown(false);
+        
+        // Now start the 60-second game timer
+        startTimeRef.current = Date.now();
+        timerRef.current = window.setInterval(() => {
+          const elapsed = Date.now() - startTimeRef.current;
+          const remaining = Math.max(0, GAME_DURATION_MS - elapsed);
+          setTimeLeftMs(remaining);
+          
+          if (remaining <= 0) {
+            // Time's up!
+            endRunInternal();
+          }
+        }, 100);
       }
-    }, 100);
+    }, 1000);
     
   }, [dailySet]);
 
@@ -678,6 +715,9 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
       if (audioRef.current) {
         audioRef.current.pause();
       }
@@ -697,6 +737,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     correctCount,
     skipUsed,
     yearHintUsed,
+    isCountingDown,
+    countdownSeconds,
     currentSong,
     slots,
     bubbles,

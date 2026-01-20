@@ -272,6 +272,8 @@ const Index = () => {
         activePianoKeys={daily.activePianoKeys}
         message={daily.message}
         messageType={daily.messageType}
+        isCountingDown={daily.isCountingDown}
+        countdownSeconds={daily.countdownSeconds}
         onBubbleClick={daily.onBubbleClick}
         onSlotClick={daily.onSlotClick}
         onSkip={daily.useSkip}
