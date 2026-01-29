@@ -185,6 +185,7 @@ export const useGameState = () => {
   const [hintsUsedInLevel, setHintsUsedInLevel] = useState(false);
   const [showNewGameNotice, setShowNewGameNotice] = useState(false);
   const [isFirstTimeCompletion, setIsFirstTimeCompletion] = useState(false);
+  const [currentQuestionType, setCurrentQuestionType] = useState<'song' | 'artist'>('song');
 
   // Computed values
   const isFirstTime = gameState.completedLevelIds.length === 0;
