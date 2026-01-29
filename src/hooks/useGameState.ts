@@ -236,6 +236,14 @@ export const useGameState = () => {
     hintsUsedRef.current = levelHintsUsed;
     setIsFirstTimeCompletion(false);
 
+    // Determine question type and answer dynamically
+    const { questionType, answer } = determineQuestionType(
+      level.songName, 
+      level.artistName, 
+      level.id
+    );
+    setCurrentQuestionType(questionType);
+
     // Try to load saved level progress first
     const savedProgress = loadLevelProgress(levelId);
     
@@ -245,9 +253,9 @@ export const useGameState = () => {
       setBubbles(savedProgress.bubbles);
       setInputHistory(savedProgress.inputHistory);
       
-      // Calculate answer letters from level title
+      // Calculate answer letters from the determined answer
       const lettersOnly: string[] = [];
-      for (const char of level.title) {
+      for (const char of answer) {
         if (isHebrewLetter(char)) {
           lettersOnly.push(char);
         }
@@ -257,12 +265,12 @@ export const useGameState = () => {
       // Create fresh slots and bubbles
       setInputHistory([]);
       
-      // Create slots from title
+      // Create slots from the determined answer
       const newSlots: Slot[] = [];
       let answerIdx = 0;
       const lettersOnly: string[] = [];
 
-      for (const char of level.title) {
+      for (const char of answer) {
         if (isHebrewLetter(char)) {
           newSlots.push({
             type: "letter",
