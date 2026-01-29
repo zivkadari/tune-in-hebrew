@@ -8,11 +8,50 @@ const HEBREW_LETTERS_NO_FINAL = "אבגדהוזחטיכלמנסעפצקרשת";
 
 // Constants for game economy
 const TOTAL_BUBBLES = 14;
+const MAX_ANSWER_LETTERS = 14;
 const HINT_COST_REVEAL_LETTER = 4;
 const HINT_COST_REMOVE_FAKES = 7;
 const HINT_COST_SOLVE_ALL = 18;
 const REWARD_BASE = 10;
 const REWARD_NO_HINTS_BONUS = 5;
+
+// Count Hebrew letters (excluding spaces)
+const countHebrewLetters = (str: string): number => {
+  return str.replace(/\s/g, '').length;
+};
+
+// Determine question type and answer dynamically based on name lengths
+const determineQuestionType = (
+  songName: string, 
+  artistName: string, 
+  levelId: number
+): { questionType: 'song' | 'artist'; answer: string } => {
+  const songLetters = countHebrewLetters(songName);
+  const artistLetters = countHebrewLetters(artistName);
+  
+  // Case 1: Song name too long → use artist
+  if (songLetters > MAX_ANSWER_LETTERS && artistLetters <= MAX_ANSWER_LETTERS) {
+    return { questionType: 'artist', answer: artistName };
+  }
+  
+  // Case 2: Artist name too long → use song
+  if (artistLetters > MAX_ANSWER_LETTERS && songLetters <= MAX_ANSWER_LETTERS) {
+    return { questionType: 'song', answer: songName };
+  }
+  
+  // Case 3: Both too long → use shorter one
+  if (songLetters > MAX_ANSWER_LETTERS && artistLetters > MAX_ANSWER_LETTERS) {
+    return songLetters <= artistLetters 
+      ? { questionType: 'song', answer: songName }
+      : { questionType: 'artist', answer: artistName };
+  }
+  
+  // Case 4: Both valid → random (seeded by levelId for consistency)
+  const useArtist = (levelId * 7) % 2 === 0;
+  return useArtist 
+    ? { questionType: 'artist', answer: artistName }
+    : { questionType: 'song', answer: songName };
+};
 
 export interface Slot {
   type: "fixed" | "letter";
@@ -146,6 +185,7 @@ export const useGameState = () => {
   const [hintsUsedInLevel, setHintsUsedInLevel] = useState(false);
   const [showNewGameNotice, setShowNewGameNotice] = useState(false);
   const [isFirstTimeCompletion, setIsFirstTimeCompletion] = useState(false);
+  const [currentQuestionType, setCurrentQuestionType] = useState<'song' | 'artist'>('song');
 
   // Computed values
   const isFirstTime = gameState.completedLevelIds.length === 0;
@@ -196,6 +236,14 @@ export const useGameState = () => {
     hintsUsedRef.current = levelHintsUsed;
     setIsFirstTimeCompletion(false);
 
+    // Determine question type and answer dynamically
+    const { questionType, answer } = determineQuestionType(
+      level.songName, 
+      level.artistName, 
+      level.id
+    );
+    setCurrentQuestionType(questionType);
+
     // Try to load saved level progress first
     const savedProgress = loadLevelProgress(levelId);
     
@@ -205,9 +253,9 @@ export const useGameState = () => {
       setBubbles(savedProgress.bubbles);
       setInputHistory(savedProgress.inputHistory);
       
-      // Calculate answer letters from level title
+      // Calculate answer letters from the determined answer
       const lettersOnly: string[] = [];
-      for (const char of level.title) {
+      for (const char of answer) {
         if (isHebrewLetter(char)) {
           lettersOnly.push(char);
         }
@@ -217,12 +265,12 @@ export const useGameState = () => {
       // Create fresh slots and bubbles
       setInputHistory([]);
       
-      // Create slots from title
+      // Create slots from the determined answer
       const newSlots: Slot[] = [];
       let answerIdx = 0;
       const lettersOnly: string[] = [];
 
-      for (const char of level.title) {
+      for (const char of answer) {
         if (isHebrewLetter(char)) {
           newSlots.push({
             type: "letter",
@@ -905,6 +953,7 @@ export const useGameState = () => {
     hintsUsedInLevel,
     showNewGameNotice,
     isFirstTimeCompletion,
+    currentQuestionType,
 
     // Stage info
     currentStageNumber,
