@@ -457,7 +457,8 @@ const Index = () => {
         stageNumber={currentStageNumber}
         totalLevels={totalLevels}
         coins={gameState.coins}
-        songTitle={currentLevel.title}
+        songName={currentLevel.songName}
+        artistName={currentLevel.artistName}
         onNextLevel={nextLevel}
         onHome={goHome}
         isLastLevel={currentLevel.id >= totalLevels}
@@ -482,7 +483,7 @@ const Index = () => {
         isPlaying={isPlaying}
         activePianoKeys={activePianoKeys}
         audioProgress={audioProgress}
-        questionType={currentLevel.questionType}
+        questionType={currentQuestionType}
         onPlay={onPlay}
         onBubbleClick={onBubbleClick}
         onSlotClick={onSlotClick}
