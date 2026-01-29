@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Play, Pause, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Lightbulb, Calendar, SkipForward } from 'lucide-react';
 import { Piano } from '@/components/Piano';
 import { DailyLetterSlots } from '@/components/DailyLetterSlots';
 import { DailyLetterBubbles } from '@/components/DailyLetterBubbles';
@@ -21,7 +21,7 @@ const TUTORIAL_SONG = {
   fakeLetters: ['א', 'ב', 'ג', 'ד', 'מ', 'ש'],
 };
 
-type TutorialStep = 'intro' | 'play-song' | 'fill-letters' | 'complete';
+type TutorialStep = 'intro' | 'play-song' | 'fill-letters' | 'hints' | 'complete';
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -168,7 +168,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onComplete, onSk
     
     if (allFilled && nonSpaceSlots.length > 0 && step === 'fill-letters') {
       if (checkAnswer()) {
-        setStep('complete');
+        setStep('hints');
       }
     }
   }, [slots, step, checkAnswer]);
@@ -211,6 +211,12 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onComplete, onSk
           title: 'מצוין! עכשיו לחץ על האותיות',
           subtitle: 'כדי להרכיב את שם השיר',
         };
+      case 'hints':
+        return {
+          icon: '💡',
+          title: 'רמזים זמינים בריצה!',
+          subtitle: 'כל רמז זמין פעם אחת בלבד',
+        };
       case 'complete':
         return {
           icon: '🎉',
@@ -251,6 +257,32 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onComplete, onSk
           </div>
         </div>
       </div>
+
+      {/* Hints explanation - only show in hints step */}
+      {step === 'hints' && (
+        <div className="mx-6 mb-4">
+          <div className="glass-card p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-primary" />
+              <span>גילוי שנת השיר</span>
+              <span className="mr-auto text-muted-foreground">פעם אחת</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <SkipForward className="w-5 h-5 text-orange-400" />
+              <span>דילוג לשיר הבא</span>
+              <span className="mr-auto text-muted-foreground">פעם אחת</span>
+            </div>
+            <div className="pt-2 border-t border-border space-y-2">
+              <p className="text-sm text-muted-foreground text-center">
+                ⏱️ יש לך 60 שניות לפתור 12 שירים
+              </p>
+              <p className="text-sm text-muted-foreground text-center">
+                🏆 הריצה הרשמית נכנסת ללוח התוצאות!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Piano and Play Button */}
       <div className="px-6 mb-4">
@@ -303,6 +335,13 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({ onComplete, onSk
             className="w-full py-6 text-lg"
           >
             בוא נתחיל! 🚀
+          </Button>
+        ) : step === 'hints' ? (
+          <Button 
+            onClick={() => setStep('complete')} 
+            className="w-full py-6 text-lg"
+          >
+            הבנתי! 👍
           </Button>
         ) : (
           <Button 

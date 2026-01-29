@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Play, Pause, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Lightbulb, Type, Eraser, Sparkles, Trash2 } from 'lucide-react';
 import { Piano } from '@/components/Piano';
 import { LetterSlots } from '@/components/LetterSlots';
 import { LetterBubbles } from '@/components/LetterBubbles';
@@ -20,7 +20,7 @@ const TUTORIAL_SONG = {
   fakeLetters: ['א', 'ב', 'ג', 'ד', 'מ'],
 };
 
-type TutorialStep = 'intro' | 'play-song' | 'fill-letters' | 'complete';
+type TutorialStep = 'intro' | 'play-song' | 'fill-letters' | 'hints' | 'complete';
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -175,7 +175,7 @@ export const ClassicTutorialScreen: React.FC<ClassicTutorialScreenProps> = ({ on
       const correctAnswer = TUTORIAL_SONG.letters.join('');
       
       if (userAnswer === correctAnswer) {
-        setStep('complete');
+        setStep('hints');
       }
     }
   }, [slots, step]);
@@ -217,6 +217,12 @@ export const ClassicTutorialScreen: React.FC<ClassicTutorialScreenProps> = ({ on
           icon: '✏️',
           title: 'מצוין! עכשיו לחץ על האותיות',
           subtitle: 'כדי להרכיב את שם השיר',
+        };
+      case 'hints':
+        return {
+          icon: '💡',
+          title: 'רמזים יכולים לעזור!',
+          subtitle: 'כשנתקעים, אפשר להשתמש במטבעות לרמזים',
         };
       case 'complete':
         return {
@@ -274,6 +280,37 @@ export const ClassicTutorialScreen: React.FC<ClassicTutorialScreenProps> = ({ on
         </div>
       )}
 
+      {/* Hints explanation - only show in hints step */}
+      {step === 'hints' && (
+        <div className="mx-6 mb-4">
+          <div className="glass-card p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Type className="w-5 h-5 text-primary" />
+              <span>גילוי אות אחת</span>
+              <span className="mr-auto text-amber-500 font-bold">4🪙</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Eraser className="w-5 h-5 text-orange-400" />
+              <span>הסרת אותיות מזויפות</span>
+              <span className="mr-auto text-amber-500 font-bold">7🪙</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              <span>פתרון מלא</span>
+              <span className="mr-auto text-amber-500 font-bold">18🪙</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Trash2 className="w-5 h-5 text-muted-foreground" />
+              <span>ניקוי האותיות</span>
+              <span className="mr-auto text-green-500 font-bold">חינם</span>
+            </div>
+            <p className="text-sm text-muted-foreground text-center pt-2 border-t border-border">
+              💰 מטבעות מרוויחים על פתרון שירים!
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Piano and Play Button */}
       <div className="px-6 mb-4">
         <Piano activeKeys={activePianoKeys} />
@@ -324,6 +361,13 @@ export const ClassicTutorialScreen: React.FC<ClassicTutorialScreenProps> = ({ on
             className="w-full py-6 text-lg"
           >
             בוא נתחיל! 🚀
+          </Button>
+        ) : step === 'hints' ? (
+          <Button 
+            onClick={() => setStep('complete')} 
+            className="w-full py-6 text-lg"
+          >
+            הבנתי! 👍
           </Button>
         ) : (
           <Button 
