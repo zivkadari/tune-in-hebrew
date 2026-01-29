@@ -27,7 +27,9 @@ import {
   isFirstTimePlayer,
   markPlayerAsReturning 
 } from "@/lib/playerStorage";
-import { hasTutorialCompleted, markTutorialCompleted } from "@/lib/tutorialStorage";
+import { hasTutorialCompleted, markTutorialCompleted, hasClassicTutorialCompleted, markClassicTutorialCompleted } from "@/lib/tutorialStorage";
+import { ClassicTutorialOfferDialog } from "@/components/ClassicTutorialOfferDialog";
+import { ClassicTutorialScreen } from "@/screens/ClassicTutorialScreen";
 
 const Index = () => {
   // Campaign mode state
@@ -78,6 +80,11 @@ const Index = () => {
   const [showPracticeWarning, setShowPracticeWarning] = useState(false);
   const [showTutorialOffer, setShowTutorialOffer] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  
+  // Classic mode tutorial state
+  const [showClassicTutorialOffer, setShowClassicTutorialOffer] = useState(false);
+  const [showClassicTutorial, setShowClassicTutorial] = useState(false);
+  const [pendingClassicAction, setPendingClassicAction] = useState<'start' | 'continue' | null>(null);
   
   const daily = useDailyTimeAttack();
 
@@ -174,6 +181,54 @@ const Index = () => {
     daily.initialize();
   }, [daily]);
 
+  // Classic Mode Tutorial handlers
+  const handleStartClassicGame = useCallback(() => {
+    if (!hasClassicTutorialCompleted()) {
+      setPendingClassicAction('start');
+      setShowClassicTutorialOffer(true);
+    } else {
+      startGame();
+    }
+  }, [startGame]);
+
+  const handleContinueClassicGame = useCallback(() => {
+    if (!hasClassicTutorialCompleted()) {
+      setPendingClassicAction('continue');
+      setShowClassicTutorialOffer(true);
+    } else {
+      continueGame();
+    }
+  }, [continueGame]);
+
+  const handleClassicTutorialAccept = useCallback(() => {
+    setShowClassicTutorialOffer(false);
+    setShowClassicTutorial(true);
+  }, []);
+
+  const handleClassicTutorialDecline = useCallback(() => {
+    setShowClassicTutorialOffer(false);
+    markClassicTutorialCompleted();
+    // Execute the pending action
+    if (pendingClassicAction === 'continue') {
+      continueGame();
+    } else {
+      startGame();
+    }
+    setPendingClassicAction(null);
+  }, [pendingClassicAction, startGame, continueGame]);
+
+  const handleClassicTutorialComplete = useCallback(() => {
+    markClassicTutorialCompleted();
+    setShowClassicTutorial(false);
+    // Execute the pending action
+    if (pendingClassicAction === 'continue') {
+      continueGame();
+    } else {
+      startGame();
+    }
+    setPendingClassicAction(null);
+  }, [pendingClassicAction, startGame, continueGame]);
+
   // Handle starting a run
   const handleStartDailyRun = useCallback((type: 'official' | 'practice') => {
     daily.startRun(type);
@@ -223,12 +278,22 @@ const Index = () => {
   }, [daily.runResult, dailyScreen]);
 
   // Daily Time Attack screens
-  // Show tutorial screen
+  // Show Daily tutorial screen
   if (showTutorial) {
     return (
       <TutorialScreen
         onComplete={handleTutorialComplete}
         onSkip={handleTutorialComplete}
+      />
+    );
+  }
+
+  // Show Classic tutorial screen
+  if (showClassicTutorial) {
+    return (
+      <ClassicTutorialScreen
+        onComplete={handleClassicTutorialComplete}
+        onSkip={handleClassicTutorialComplete}
       />
     );
   }
@@ -341,8 +406,8 @@ const Index = () => {
         <HomeScreen
           coins={gameState.coins}
           isFirstTime={isFirstTime}
-          onStart={startGame}
-          onContinue={continueGame}
+          onStart={handleStartClassicGame}
+          onContinue={handleContinueClassicGame}
           onRestart={restartGame}
           onLevels={openLevelsScreen}
           onFullReset={fullReset}
@@ -361,6 +426,11 @@ const Index = () => {
           open={showTutorialOffer}
           onAccept={handleTutorialAccept}
           onDecline={handleTutorialDecline}
+        />
+        <ClassicTutorialOfferDialog
+          open={showClassicTutorialOffer}
+          onAccept={handleClassicTutorialAccept}
+          onDecline={handleClassicTutorialDecline}
         />
       </>
     );
