@@ -953,6 +953,7 @@ export const useGameState = () => {
     hintsUsedInLevel,
     showNewGameNotice,
     isFirstTimeCompletion,
+    currentQuestionType,
 
     // Stage info
     currentStageNumber,

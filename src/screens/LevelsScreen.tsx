@@ -173,7 +173,7 @@ export const LevelsScreen: React.FC<LevelsScreenProps> = ({
                         {/* Song info */}
                         <div className="flex-1 text-right">
                           {isCompleted ? (
-                            <span className="text-foreground">{song.title}</span>
+                            <span className="text-foreground">{song.songName}</span>
                           ) : (
                             <span className="text-muted-foreground flex items-center gap-2 justify-end">
                               <Music className="w-4 h-4" />
