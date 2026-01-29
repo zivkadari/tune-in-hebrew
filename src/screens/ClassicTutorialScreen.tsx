@@ -170,11 +170,15 @@ export const ClassicTutorialScreen: React.FC<ClassicTutorialScreenProps> = ({ on
     const allFilled = letterSlots.every(s => s.value !== null);
     
     if (allFilled && letterSlots.length > 0 && step === 'fill-letters') {
-      if (checkAnswer()) {
+      // Direct answer check to avoid closure issues
+      const userAnswer = letterSlots.map(s => s.value).join('');
+      const correctAnswer = TUTORIAL_SONG.letters.join('');
+      
+      if (userAnswer === correctAnswer) {
         setStep('complete');
       }
     }
-  }, [slots, step, checkAnswer]);
+  }, [slots, step]);
 
   // Cleanup audio on unmount
   useEffect(() => {
