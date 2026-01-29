@@ -7,7 +7,8 @@ interface SuccessScreenProps {
   stageNumber: number;
   totalLevels: number;
   coins: number;
-  songTitle: string;
+  songName: string;
+  artistName: string;
   onNextLevel: () => void;
   onHome: () => void;
   isLastLevel: boolean;
@@ -21,7 +22,8 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   stageNumber,
   totalLevels,
   coins,
-  songTitle,
+  songName,
+  artistName,
   onNextLevel,
   onHome,
   isLastLevel,
@@ -76,8 +78,11 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
           <h1 className="text-3xl sm:text-4xl font-black mb-3 text-success">
             {isLastSongInStage ? "סיימת את השלב! 🏆" : "כל הכבוד! 🎉"}
           </h1>
-          <p className="text-xl text-foreground font-bold mb-2">
-            {songTitle}
+          <p className="text-xl text-foreground font-bold mb-1">
+            "{songName}"
+          </p>
+          <p className="text-lg text-muted-foreground mb-2">
+            {artistName}
           </p>
           <p className="text-muted-foreground">
             שיר {songNumber}/{totalLevels} • שלב {stageNumber}
