@@ -53,6 +53,7 @@ const Index = () => {
     hintsUsedInLevel,
     showNewGameNotice,
     isFirstTimeCompletion,
+    currentQuestionType,
     startGame,
     continueGame,
     restartGame,
