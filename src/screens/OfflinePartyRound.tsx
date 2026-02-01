@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, Eye, Check, SkipForward, Trophy, X } from 'lucide-react';
 import { useButtonFeedback } from '@/hooks/useButtonFeedback';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import { Piano } from '@/components/Piano';
 import type { PartyPlayer, PartySong, QuestionType } from '@/types/partyMode';
 
