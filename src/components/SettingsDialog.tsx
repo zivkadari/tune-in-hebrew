@@ -66,6 +66,15 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
     }
   };
 
+  const handleSoundToggle = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    setSoundEnabledState(enabled);
+    if (enabled) {
+      // Demo sound when enabling
+      playCorrectSound();
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
