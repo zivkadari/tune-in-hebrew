@@ -227,5 +227,6 @@ export function useOfflineParty(): UseOfflinePartyReturn {
     awardPoint,
     nextRound,
     resetGame,
+    fullReset,
   };
 }
