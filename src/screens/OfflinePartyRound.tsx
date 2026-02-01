@@ -128,7 +128,7 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
-    <div className="min-h-screen flex flex-col p-4 sm:p-6 relative overflow-hidden safe-area-top safe-area-bottom">
+    <div className="min-h-screen flex flex-col p-4 safe-area-bottom relative overflow-hidden" style={{ paddingTop: `${Math.max(safeAreaTop + 8, 48)}px` }}>
       {/* Background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl" />
