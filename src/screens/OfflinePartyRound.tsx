@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, Eye, Check, SkipForward, Trophy, X } from 'lucide-react';
 import { useButtonFeedback } from '@/hooks/useButtonFeedback';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import { Piano } from '@/components/Piano';
 import type { PartyPlayer, PartySong, QuestionType } from '@/types/partyMode';
 
@@ -30,6 +31,7 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
   onQuit,
 }) => {
   const { withFeedback } = useButtonFeedback();
+  const { safeAreaTop } = useDeviceType();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePianoKeys, setActivePianoKeys] = useState<number[]>([]);
   const [awardedThisRound, setAwardedThisRound] = useState<Set<string>>(new Set());
@@ -126,7 +128,7 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
-    <div className="min-h-screen flex flex-col p-4 sm:p-6 relative overflow-hidden safe-area-top safe-area-bottom">
+    <div className="min-h-screen flex flex-col p-4 safe-area-bottom relative overflow-hidden" style={{ paddingTop: `${Math.max(safeAreaTop + 8, 48)}px` }}>
       {/* Background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl" />
@@ -155,20 +157,20 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
       </div>
 
       {/* Piano & Play */}
-      <div className="flex flex-col items-center gap-4 mb-6 relative z-10">
+      <div className="flex flex-col items-center gap-3 mb-4 relative z-10">
         <Piano activeKeys={activePianoKeys} />
         
         <button
           onClick={withFeedback(togglePlay)}
-          className={`w-20 h-20 rounded-full flex items-center justify-center transition-all
+          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all
             ${isPlaying 
               ? 'bg-destructive text-destructive-foreground' 
               : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-lg hover:shadow-orange-500/30'}`}
         >
           {isPlaying ? (
-            <Pause className="w-8 h-8" />
+            <Pause className="w-6 h-6" />
           ) : (
-            <Play className="w-8 h-8 ml-1" fill="currentColor" />
+            <Play className="w-6 h-6 ml-1" fill="currentColor" />
           )}
         </button>
       </div>
