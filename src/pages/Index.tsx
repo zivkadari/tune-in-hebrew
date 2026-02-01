@@ -276,7 +276,7 @@ const Index = () => {
 
   const handleBackFromParty = useCallback(() => {
     setPartyScreen(null);
-    offlineParty.resetGame();
+    offlineParty.fullReset(); // Full reset when going back to main menu (clears played songs history)
   }, [offlineParty]);
 
   const handleStartOfflineParty = useCallback(() => {

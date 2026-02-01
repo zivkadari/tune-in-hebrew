@@ -52,6 +52,7 @@ export interface UseOfflinePartyReturn {
   awardPoint: (playerId: string) => void;
   nextRound: () => void;
   resetGame: () => void;
+  fullReset: () => void;
 }
 
 export function useOfflineParty(): UseOfflinePartyReturn {
@@ -65,6 +66,7 @@ export function useOfflineParty(): UseOfflinePartyReturn {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [playedSongIds, setPlayedSongIds] = useState<Set<number>>(new Set());
 
   // Computed values
   const currentSong = useMemo(() => {
@@ -118,8 +120,18 @@ export function useOfflineParty(): UseOfflinePartyReturn {
   const startGame = useCallback(() => {
     if (players.length < 2) return;
     
+    // Filter out already played songs
+    let availableLevels = levels.filter(level => !playedSongIds.has(level.id));
+    
+    // If not enough songs available, reset the played list and use all levels
+    let shouldResetPlayedIds = false;
+    if (availableLevels.length < settings.roundCount) {
+      shouldResetPlayedIds = true;
+      availableLevels = levels;
+    }
+    
     // Shuffle and pick songs for the game
-    const shuffledLevels = shuffleArray(levels);
+    const shuffledLevels = shuffleArray(availableLevels);
     const selectedSongs: PartySong[] = shuffledLevels
       .slice(0, settings.roundCount)
       .map(level => ({
@@ -130,6 +142,13 @@ export function useOfflineParty(): UseOfflinePartyReturn {
         releaseYear: level.releaseYear,
       }));
     
+    // Update played song IDs
+    setPlayedSongIds(prev => {
+      const updated = shouldResetPlayedIds ? new Set<number>() : new Set(prev);
+      selectedSongs.forEach(song => updated.add(song.id));
+      return updated;
+    });
+    
     setSongs(selectedSongs);
     setCurrentRound(1);
     setIsRevealed(false);
@@ -138,7 +157,7 @@ export function useOfflineParty(): UseOfflinePartyReturn {
     
     // Reset all scores
     setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
-  }, [players.length, settings.roundCount]);
+  }, [players.length, settings.roundCount, playedSongIds]);
 
   const revealAnswer = useCallback(() => {
     setIsRevealed(true);
@@ -166,6 +185,17 @@ export function useOfflineParty(): UseOfflinePartyReturn {
     setIsFinished(false);
     setIsGameStarted(false);
     setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
+    // Note: playedSongIds is NOT reset here to preserve history between games
+  }, []);
+
+  const fullReset = useCallback(() => {
+    setSongs([]);
+    setCurrentRound(0);
+    setIsRevealed(false);
+    setIsFinished(false);
+    setIsGameStarted(false);
+    setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
+    setPlayedSongIds(new Set()); // Reset played songs history
   }, []);
 
   return {
@@ -197,5 +227,6 @@ export function useOfflineParty(): UseOfflinePartyReturn {
     awardPoint,
     nextRound,
     resetGame,
+    fullReset,
   };
 }
