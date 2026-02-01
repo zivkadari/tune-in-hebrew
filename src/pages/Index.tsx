@@ -438,6 +438,68 @@ const Index = () => {
     );
   }
 
+  // Party Mode screens
+  if (partyScreen === 'party-home') {
+    return (
+      <PartyModeHome
+        onOfflineParty={() => setPartyScreen('offline-setup')}
+        onOnlineParty={() => {/* Coming soon */}}
+        onBack={handleBackFromParty}
+      />
+    );
+  }
+
+  if (partyScreen === 'offline-setup') {
+    return (
+      <OfflinePartySetup
+        players={offlineParty.players}
+        questionType={offlineParty.settings.questionType}
+        roundCount={offlineParty.settings.roundCount}
+        onAddPlayer={offlineParty.addPlayer}
+        onRemovePlayer={offlineParty.removePlayer}
+        onSetQuestionType={offlineParty.setQuestionType}
+        onSetRoundCount={offlineParty.setRoundCount}
+        onStartGame={handleStartOfflineParty}
+        onBack={() => setPartyScreen('party-home')}
+      />
+    );
+  }
+
+  if (partyScreen === 'offline-round' && offlineParty.currentSong) {
+    return (
+      <OfflinePartyRound
+        currentRound={offlineParty.currentRound}
+        totalRounds={offlineParty.totalRounds}
+        currentSong={offlineParty.currentSong}
+        players={offlineParty.players}
+        questionType={offlineParty.settings.questionType}
+        isRevealed={offlineParty.isRevealed}
+        onReveal={offlineParty.revealAnswer}
+        onAwardPoint={offlineParty.awardPoint}
+        onNextRound={() => {
+          if (offlineParty.currentRound >= offlineParty.totalRounds) {
+            offlineParty.nextRound();
+            setPartyScreen('offline-results');
+          } else {
+            offlineParty.nextRound();
+          }
+        }}
+        onQuit={handleBackFromParty}
+      />
+    );
+  }
+
+  if (partyScreen === 'offline-results' || offlineParty.isFinished) {
+    return (
+      <OfflinePartyResults
+        players={offlineParty.sortedPlayersByScore}
+        totalRounds={offlineParty.totalRounds}
+        onPlayAgain={handleOfflinePartyPlayAgain}
+        onHome={handleBackFromParty}
+      />
+    );
+  }
+
   // Campaign mode screens
   if (screen === "home") {
     return (
@@ -451,6 +513,7 @@ const Index = () => {
           onLevels={openLevelsScreen}
           onFullReset={fullReset}
           onTimeAttack={handleOpenTimeAttack}
+          onPartyMode={handleOpenPartyMode}
         />
         <NewGameNoticeDialog
           open={showNewGameNotice}
