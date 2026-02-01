@@ -157,20 +157,20 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
       </div>
 
       {/* Piano & Play */}
-      <div className="flex flex-col items-center gap-4 mb-6 relative z-10">
+      <div className="flex flex-col items-center gap-3 mb-4 relative z-10">
         <Piano activeKeys={activePianoKeys} />
         
         <button
           onClick={withFeedback(togglePlay)}
-          className={`w-20 h-20 rounded-full flex items-center justify-center transition-all
+          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all
             ${isPlaying 
               ? 'bg-destructive text-destructive-foreground' 
               : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-lg hover:shadow-orange-500/30'}`}
         >
           {isPlaying ? (
-            <Pause className="w-8 h-8" />
+            <Pause className="w-6 h-6" />
           ) : (
-            <Play className="w-8 h-8 ml-1" fill="currentColor" />
+            <Play className="w-6 h-6 ml-1" fill="currentColor" />
           )}
         </button>
       </div>
