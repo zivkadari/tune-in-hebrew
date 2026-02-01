@@ -37,6 +37,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
   const [currentName, setCurrentName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [hapticEnabled, setHapticEnabledState] = useState(isHapticEnabled());
+  const [soundEnabled, setSoundEnabledState] = useState(isSoundEnabled());
 
   useEffect(() => {
     if (open) {
