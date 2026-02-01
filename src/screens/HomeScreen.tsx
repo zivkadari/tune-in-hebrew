@@ -1,5 +1,5 @@
 import React from "react";
-import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock } from "lucide-react";
+import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock, Users } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { useButtonFeedback } from "@/hooks/useButtonFeedback";
@@ -13,6 +13,7 @@ interface HomeScreenProps {
   onLevels: () => void;
   onFullReset: () => void;
   onTimeAttack: () => void;
+  onPartyMode: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
