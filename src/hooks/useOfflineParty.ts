@@ -52,6 +52,7 @@ export interface UseOfflinePartyReturn {
   awardPoint: (playerId: string) => void;
   nextRound: () => void;
   resetGame: () => void;
+  fullReset: () => void;
 }
 
 export function useOfflineParty(): UseOfflinePartyReturn {
