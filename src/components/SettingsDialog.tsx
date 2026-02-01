@@ -105,6 +105,18 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
             <DialogTitle className="text-center text-xl">⚙️ הגדרות</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-3">
+            {/* Sound toggle */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+              <div className="flex items-center gap-3">
+                <Volume2 className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium">צלילי משחק</span>
+              </div>
+              <Switch 
+                checked={soundEnabled}
+                onCheckedChange={handleSoundToggle}
+              />
+            </div>
+            
             {/* Haptic toggle */}
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-3">

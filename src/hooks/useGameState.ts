@@ -363,6 +363,16 @@ export const useGameState = () => {
     const levelId = currentLevel!.id;
     const wasFirstTime = !gameState.completedLevelIds.includes(levelId);
     
+    // Play success sound
+    playCorrectSound();
+    
+    // Play stage complete sound if this is the last song in a stage
+    if (isLastSongInStage(levelId)) {
+      setTimeout(() => {
+        playStageCompleteSound();
+      }, 500);
+    }
+    
     // Save this value BEFORE updating state, so SuccessScreen gets the correct value
     setIsFirstTimeCompletion(wasFirstTime);
     
