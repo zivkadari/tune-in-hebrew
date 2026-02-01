@@ -66,6 +66,7 @@ export function useOfflineParty(): UseOfflinePartyReturn {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [playedSongIds, setPlayedSongIds] = useState<Set<number>>(new Set());
 
   // Computed values
   const currentSong = useMemo(() => {
