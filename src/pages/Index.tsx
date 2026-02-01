@@ -269,6 +269,33 @@ const Index = () => {
     setDailyScreen(null);
   }, []);
 
+  // Party Mode handlers
+  const handleOpenPartyMode = useCallback(() => {
+    setPartyScreen('party-home');
+  }, []);
+
+  const handleBackFromParty = useCallback(() => {
+    setPartyScreen(null);
+    offlineParty.resetGame();
+  }, [offlineParty]);
+
+  const handleStartOfflineParty = useCallback(() => {
+    offlineParty.startGame();
+    setPartyScreen('offline-round');
+  }, [offlineParty]);
+
+  const handleOfflinePartyNextRound = useCallback(() => {
+    offlineParty.nextRound();
+    if (offlineParty.currentRound >= offlineParty.totalRounds) {
+      setPartyScreen('offline-results');
+    }
+  }, [offlineParty]);
+
+  const handleOfflinePartyPlayAgain = useCallback(() => {
+    offlineParty.resetGame();
+    setPartyScreen('offline-setup');
+  }, [offlineParty]);
+
   // Handle showing leaderboard
   const handleShowLeaderboard = useCallback(async () => {
     await daily.fetchLeaderboard();
