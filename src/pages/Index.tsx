@@ -94,6 +94,10 @@ const Index = () => {
   const [showClassicTutorial, setShowClassicTutorial] = useState(false);
   const [pendingClassicAction, setPendingClassicAction] = useState<'start' | 'continue' | null>(null);
   
+  // Party Mode state
+  const [partyScreen, setPartyScreen] = useState<PartyScreen | null>(null);
+  const offlineParty = useOfflineParty();
+  
   const daily = useDailyTimeAttack();
 
   // Welcome dialog state for first-time players
