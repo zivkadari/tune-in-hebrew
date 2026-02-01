@@ -1,5 +1,5 @@
 import React from "react";
-import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock } from "lucide-react";
+import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock, Users } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { useButtonFeedback } from "@/hooks/useButtonFeedback";
@@ -13,6 +13,7 @@ interface HomeScreenProps {
   onLevels: () => void;
   onFullReset: () => void;
   onTimeAttack: () => void;
+  onPartyMode: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -24,6 +25,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onLevels,
   onFullReset,
   onTimeAttack,
+  onPartyMode,
 }) => {
   const { withFeedback } = useButtonFeedback();
 
@@ -122,6 +124,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           >
             <Clock className="w-5 h-5" />
             <span>⏱️ Time Attack יומי</span>
+          </button>
+
+          <button 
+            onClick={withFeedback(onPartyMode)} 
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all
+                       bg-gradient-to-r from-pink-500 to-purple-500 text-white
+                       hover:from-pink-400 hover:to-purple-400 hover:shadow-lg hover:shadow-pink-500/30
+                       active:scale-[0.98]"
+          >
+            <Users className="w-5 h-5" />
+            <span>🎉 מצב מסיבה</span>
           </button>
         </div>
       </div>

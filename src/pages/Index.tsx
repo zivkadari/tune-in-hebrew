@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGameState } from "@/hooks/useGameState";
 import { useDailyTimeAttack } from "@/hooks/useDailyTimeAttack";
+import { useOfflineParty } from "@/hooks/useOfflineParty";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LevelScreen } from "@/screens/LevelScreen";
 import { SuccessScreen } from "@/screens/SuccessScreen";
@@ -18,6 +19,10 @@ import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
 import { WelcomeNameDialog } from "@/components/WelcomeNameDialog";
 import { TutorialOfferDialog } from "@/components/TutorialOfferDialog";
 import { TutorialScreen } from "@/screens/TutorialScreen";
+import { PartyModeHome } from "@/screens/PartyModeHome";
+import { OfflinePartySetup } from "@/screens/OfflinePartySetup";
+import { OfflinePartyRound } from "@/screens/OfflinePartyRound";
+import { OfflinePartyResults } from "@/screens/OfflinePartyResults";
 import type { DailyScreen } from "@/types/dailyTimeAttack";
 import { 
   getPlayerId, 
@@ -30,6 +35,8 @@ import {
 import { hasTutorialCompleted, markTutorialCompleted, hasClassicTutorialCompleted, markClassicTutorialCompleted } from "@/lib/tutorialStorage";
 import { ClassicTutorialOfferDialog } from "@/components/ClassicTutorialOfferDialog";
 import { ClassicTutorialScreen } from "@/screens/ClassicTutorialScreen";
+
+type PartyScreen = 'party-home' | 'offline-setup' | 'offline-round' | 'offline-results';
 
 const Index = () => {
   // Campaign mode state
@@ -86,6 +93,10 @@ const Index = () => {
   const [showClassicTutorialOffer, setShowClassicTutorialOffer] = useState(false);
   const [showClassicTutorial, setShowClassicTutorial] = useState(false);
   const [pendingClassicAction, setPendingClassicAction] = useState<'start' | 'continue' | null>(null);
+  
+  // Party Mode state
+  const [partyScreen, setPartyScreen] = useState<PartyScreen | null>(null);
+  const offlineParty = useOfflineParty();
   
   const daily = useDailyTimeAttack();
 
@@ -258,6 +269,33 @@ const Index = () => {
     setDailyScreen(null);
   }, []);
 
+  // Party Mode handlers
+  const handleOpenPartyMode = useCallback(() => {
+    setPartyScreen('party-home');
+  }, []);
+
+  const handleBackFromParty = useCallback(() => {
+    setPartyScreen(null);
+    offlineParty.resetGame();
+  }, [offlineParty]);
+
+  const handleStartOfflineParty = useCallback(() => {
+    offlineParty.startGame();
+    setPartyScreen('offline-round');
+  }, [offlineParty]);
+
+  const handleOfflinePartyNextRound = useCallback(() => {
+    offlineParty.nextRound();
+    if (offlineParty.currentRound >= offlineParty.totalRounds) {
+      setPartyScreen('offline-results');
+    }
+  }, [offlineParty]);
+
+  const handleOfflinePartyPlayAgain = useCallback(() => {
+    offlineParty.resetGame();
+    setPartyScreen('offline-setup');
+  }, [offlineParty]);
+
   // Handle showing leaderboard
   const handleShowLeaderboard = useCallback(async () => {
     await daily.fetchLeaderboard();
@@ -400,6 +438,68 @@ const Index = () => {
     );
   }
 
+  // Party Mode screens
+  if (partyScreen === 'party-home') {
+    return (
+      <PartyModeHome
+        onOfflineParty={() => setPartyScreen('offline-setup')}
+        onOnlineParty={() => {/* Coming soon */}}
+        onBack={handleBackFromParty}
+      />
+    );
+  }
+
+  if (partyScreen === 'offline-setup') {
+    return (
+      <OfflinePartySetup
+        players={offlineParty.players}
+        questionType={offlineParty.settings.questionType}
+        roundCount={offlineParty.settings.roundCount}
+        onAddPlayer={offlineParty.addPlayer}
+        onRemovePlayer={offlineParty.removePlayer}
+        onSetQuestionType={offlineParty.setQuestionType}
+        onSetRoundCount={offlineParty.setRoundCount}
+        onStartGame={handleStartOfflineParty}
+        onBack={() => setPartyScreen('party-home')}
+      />
+    );
+  }
+
+  if (partyScreen === 'offline-round' && offlineParty.currentSong) {
+    return (
+      <OfflinePartyRound
+        currentRound={offlineParty.currentRound}
+        totalRounds={offlineParty.totalRounds}
+        currentSong={offlineParty.currentSong}
+        players={offlineParty.players}
+        questionType={offlineParty.settings.questionType}
+        isRevealed={offlineParty.isRevealed}
+        onReveal={offlineParty.revealAnswer}
+        onAwardPoint={offlineParty.awardPoint}
+        onNextRound={() => {
+          if (offlineParty.currentRound >= offlineParty.totalRounds) {
+            offlineParty.nextRound();
+            setPartyScreen('offline-results');
+          } else {
+            offlineParty.nextRound();
+          }
+        }}
+        onQuit={handleBackFromParty}
+      />
+    );
+  }
+
+  if (partyScreen === 'offline-results' || offlineParty.isFinished) {
+    return (
+      <OfflinePartyResults
+        players={offlineParty.sortedPlayersByScore}
+        totalRounds={offlineParty.totalRounds}
+        onPlayAgain={handleOfflinePartyPlayAgain}
+        onHome={handleBackFromParty}
+      />
+    );
+  }
+
   // Campaign mode screens
   if (screen === "home") {
     return (
@@ -413,6 +513,7 @@ const Index = () => {
           onLevels={openLevelsScreen}
           onFullReset={fullReset}
           onTimeAttack={handleOpenTimeAttack}
+          onPartyMode={handleOpenPartyMode}
         />
         <NewGameNoticeDialog
           open={showNewGameNotice}
