@@ -25,6 +25,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onLevels,
   onFullReset,
   onTimeAttack,
+  onPartyMode,
 }) => {
   const { withFeedback } = useButtonFeedback();
 
