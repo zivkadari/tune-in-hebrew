@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, AlertTriangle, Edit, Trash2, Vibrate } from "lucide-react";
+import { Settings, AlertTriangle, Edit, Trash2, Vibrate, Volume2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import {
 import { EditNameDialog } from "./EditNameDialog";
 import { getPlayerName, updatePlayerName, deletePlayer } from "@/lib/playerStorage";
 import { isHapticEnabled, setHapticEnabled, triggerHaptic } from "@/lib/haptics";
+import { isSoundEnabled, setSoundEnabled, playCorrectSound } from "@/lib/sounds";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
   const [currentName, setCurrentName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [hapticEnabled, setHapticEnabledState] = useState(isHapticEnabled());
+  const [soundEnabled, setSoundEnabledState] = useState(isSoundEnabled());
 
   useEffect(() => {
     if (open) {
@@ -61,6 +63,15 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
     if (enabled) {
       // Demo vibration when enabling
       triggerHaptic(20);
+    }
+  };
+
+  const handleSoundToggle = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    setSoundEnabledState(enabled);
+    if (enabled) {
+      // Demo sound when enabling
+      playCorrectSound();
     }
   };
 
@@ -94,6 +105,18 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ onFullReset, onN
             <DialogTitle className="text-center text-xl">⚙️ הגדרות</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-3">
+            {/* Sound toggle */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+              <div className="flex items-center gap-3">
+                <Volume2 className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium">צלילי משחק</span>
+              </div>
+              <Switch 
+                checked={soundEnabled}
+                onCheckedChange={handleSoundToggle}
+              />
+            </div>
+            
             {/* Haptic toggle */}
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-3">
