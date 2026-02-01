@@ -1,34 +1,70 @@
 
-## תיקון: מסך סיבוב ב-Party Mode נחתך מלמעלה
+
+## תכנית: מניעת חזרה על שירים ב-"שחק שוב"
 
 ### הבעיה
-במסך `OfflinePartyRound`, הכותרת "סיבוב X/Y" נחתכת בחלק העליון של המסך באייפון. הסיבה היא שהמסך משתמש בקלאס `safe-area-top` שלא מתנהג נכון עם המבנה הנוכחי.
+כאשר המשתמש לוחץ "שחק שוב" ב-Offline Party Mode, המשחק בוחר שירים חדשים באקראי מכל מאגר השירים - כולל שירים שכבר נוגנו במשחקים הקודמים באותו סשן.
 
 ### הפתרון
-לאמץ את הגישה שעובדת במסך `DailyTimeAttackRun`:
+לשמור רשימה של שירים שכבר נוגנו (לפי ID), ובהתחלת משחק חדש לסנן אותם מהמאגר.
 
-1. להוסיף את ה-hook `useDeviceType` לחישוב דינמי של ה-safe area
-2. להחליף את `safe-area-top` ב-CSS ל-`paddingTop` דינמי ב-style inline
-3. להוריד את גודל הפסנתר וכפתור ההשמעה כדי לייצר יותר מקום
+---
 
-### שינויים בקובץ `src/screens/OfflinePartyRound.tsx`
+### שינויים בקובץ `src/hooks/useOfflineParty.ts`
 
-```text
-שורה 2: הוספת import ל-useDeviceType
-שורה 33: הוספת קריאה ל-hook: const { safeAreaTop } = useDeviceType();
-
-שורה 128-129: שינוי ה-div הראשי מ:
-  className="min-h-screen flex flex-col p-4 sm:p-6 relative overflow-hidden safe-area-top safe-area-bottom"
-ל:
-  className="min-h-screen flex flex-col p-4 safe-area-bottom relative overflow-hidden"
-  style={{ paddingTop: `${Math.max(safeAreaTop + 8, 48)}px` }}
-
-שורות 158-174: הקטנת הפסנתר וכפתור ההשמעה:
-  - gap-4 → gap-3
-  - mb-6 → mb-4
-  - כפתור play: w-20 h-20 → w-16 h-16
-  - אייקון play: w-8 h-8 → w-6 h-6
+#### 1. הוספת state לשירים שנוגנו
+```typescript
+const [playedSongIds, setPlayedSongIds] = useState<Set<number>>(new Set());
 ```
 
-### תוצאה צפויה
-הכותרת תמוקם נכון מתחת ל-notch של האייפון, וכל התוכן יהיה נראה במסך ללא צורך בגלילה.
+#### 2. שינוי פונקציית `startGame`
+לסנן שירים שכבר נוגנו:
+```typescript
+const startGame = useCallback(() => {
+  if (players.length < 2) return;
+  
+  // Filter out already played songs
+  const availableLevels = levels.filter(level => !playedSongIds.has(level.id));
+  
+  // If not enough songs available, reset the played list
+  if (availableLevels.length < settings.roundCount) {
+    setPlayedSongIds(new Set());
+    // Use all levels if we've exhausted available songs
+    const shuffledLevels = shuffleArray(levels);
+    // ... select songs
+  } else {
+    const shuffledLevels = shuffleArray(availableLevels);
+    // ... select songs
+  }
+  
+  // Add selected song IDs to played list
+  setPlayedSongIds(prev => {
+    const updated = new Set(prev);
+    selectedSongs.forEach(song => updated.add(song.id));
+    return updated;
+  });
+  
+  // ... rest of the function
+}, [players.length, settings.roundCount, playedSongIds]);
+```
+
+#### 3. שינוי פונקציית `resetGame`
+**לא** לאפס את `playedSongIds` - כדי שהזיכרון יישמר בין משחקים.
+
+#### 4. הוספת פונקציה חדשה `fullReset` (אופציונלי)
+לאיפוס מלא כולל השירים שנוגנו - לשימוש כשחוזרים לתפריט הראשי.
+
+---
+
+### התנהגות צפויה
+
+| פעולה | התנהגות |
+|-------|----------|
+| התחלת משחק ראשון | בוחר 10/15/20 שירים אקראיים |
+| "שחק שוב" | בוחר שירים חדשים שלא נוגנו עדיין |
+| אם נגמרו השירים | מאפס את הרשימה ומתחיל מחדש |
+| חזרה לתפריט | מאפס הכל כולל רשימת השירים |
+
+### מספר השירים במאגר
+יש כ-46 שירים ב-`levels.ts`, כך שאפשר לשחק כ-4 משחקים של 10 סיבובים לפני שצריך לחזור על שירים.
+
