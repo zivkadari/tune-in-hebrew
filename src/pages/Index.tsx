@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGameState } from "@/hooks/useGameState";
 import { useDailyTimeAttack } from "@/hooks/useDailyTimeAttack";
+import { useOfflineParty } from "@/hooks/useOfflineParty";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LevelScreen } from "@/screens/LevelScreen";
 import { SuccessScreen } from "@/screens/SuccessScreen";
@@ -18,6 +19,10 @@ import { PracticeWarningDialog } from "@/components/PracticeWarningDialog";
 import { WelcomeNameDialog } from "@/components/WelcomeNameDialog";
 import { TutorialOfferDialog } from "@/components/TutorialOfferDialog";
 import { TutorialScreen } from "@/screens/TutorialScreen";
+import { PartyModeHome } from "@/screens/PartyModeHome";
+import { OfflinePartySetup } from "@/screens/OfflinePartySetup";
+import { OfflinePartyRound } from "@/screens/OfflinePartyRound";
+import { OfflinePartyResults } from "@/screens/OfflinePartyResults";
 import type { DailyScreen } from "@/types/dailyTimeAttack";
 import { 
   getPlayerId, 
@@ -30,6 +35,8 @@ import {
 import { hasTutorialCompleted, markTutorialCompleted, hasClassicTutorialCompleted, markClassicTutorialCompleted } from "@/lib/tutorialStorage";
 import { ClassicTutorialOfferDialog } from "@/components/ClassicTutorialOfferDialog";
 import { ClassicTutorialScreen } from "@/screens/ClassicTutorialScreen";
+
+type PartyScreen = 'party-home' | 'offline-setup' | 'offline-round' | 'offline-results';
 
 const Index = () => {
   // Campaign mode state
