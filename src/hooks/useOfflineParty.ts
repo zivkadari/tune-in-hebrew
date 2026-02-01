@@ -185,6 +185,17 @@ export function useOfflineParty(): UseOfflinePartyReturn {
     setIsFinished(false);
     setIsGameStarted(false);
     setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
+    // Note: playedSongIds is NOT reset here to preserve history between games
+  }, []);
+
+  const fullReset = useCallback(() => {
+    setSongs([]);
+    setCurrentRound(0);
+    setIsRevealed(false);
+    setIsFinished(false);
+    setIsGameStarted(false);
+    setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
+    setPlayedSongIds(new Set()); // Reset played songs history
   }, []);
 
   return {
