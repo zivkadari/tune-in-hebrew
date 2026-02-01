@@ -31,6 +31,7 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
   onQuit,
 }) => {
   const { withFeedback } = useButtonFeedback();
+  const { safeAreaTop } = useDeviceType();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePianoKeys, setActivePianoKeys] = useState<number[]>([]);
   const [awardedThisRound, setAwardedThisRound] = useState<Set<string>>(new Set());
