@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Level, levels, getStageNumber, isLastSongInStage } from "@/data/levels";
 import { toast } from "sonner";
+import { playCorrectSound, playStageCompleteSound } from "@/lib/sounds";
 
 // Hebrew letters including final forms
 const HEBREW_LETTERS = "אבגדהוזחטיכלמנסעפצקרשתךםןףץ";
