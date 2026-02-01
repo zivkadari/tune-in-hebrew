@@ -125,6 +125,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <Clock className="w-5 h-5" />
             <span>⏱️ Time Attack יומי</span>
           </button>
+
+          <button 
+            onClick={withFeedback(onPartyMode)} 
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all
+                       bg-gradient-to-r from-pink-500 to-purple-500 text-white
+                       hover:from-pink-400 hover:to-purple-400 hover:shadow-lg hover:shadow-pink-500/30
+                       active:scale-[0.98]"
+          >
+            <Users className="w-5 h-5" />
+            <span>🎉 מצב מסיבה</span>
+          </button>
         </div>
       </div>
 
