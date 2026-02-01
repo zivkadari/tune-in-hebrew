@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, AlertTriangle, Edit, Trash2, Vibrate } from "lucide-react";
+import { Settings, AlertTriangle, Edit, Trash2, Vibrate, Volume2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import {
 import { EditNameDialog } from "./EditNameDialog";
 import { getPlayerName, updatePlayerName, deletePlayer } from "@/lib/playerStorage";
 import { isHapticEnabled, setHapticEnabled, triggerHaptic } from "@/lib/haptics";
+import { isSoundEnabled, setSoundEnabled, playCorrectSound } from "@/lib/sounds";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
