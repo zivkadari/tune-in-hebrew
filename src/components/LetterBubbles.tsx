@@ -1,5 +1,6 @@
 import React from "react";
 import { Bubble } from "@/hooks/useGameState";
+import { playTapSound } from "@/lib/sounds";
 
 interface LetterBubblesProps {
   bubbles: Bubble[];
@@ -15,7 +16,12 @@ export const LetterBubbles: React.FC<LetterBubblesProps> = ({
       {bubbles.map((bubble) => (
         <button
           key={bubble.id}
-          onClick={() => !bubble.used && onBubbleClick(bubble.id)}
+          onClick={() => {
+            if (!bubble.used) {
+              playTapSound();
+              onBubbleClick(bubble.id);
+            }
+          }}
           disabled={bubble.used}
           className={`letter-bubble ${
             bubble.used ? "letter-bubble-used" : "letter-bubble-active"

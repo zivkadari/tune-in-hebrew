@@ -18,6 +18,7 @@ export const setSoundEnabled = (enabled: boolean): void => {
 // Lazy-load audio to avoid issues on mobile
 let correctSound: HTMLAudioElement | null = null;
 let stageCompleteSound: HTMLAudioElement | null = null;
+let tapSound: HTMLAudioElement | null = null;
 
 const getCorrectSound = (): HTMLAudioElement => {
   if (!correctSound) {
@@ -29,10 +30,18 @@ const getCorrectSound = (): HTMLAudioElement => {
 
 const getStageCompleteSound = (): HTMLAudioElement => {
   if (!stageCompleteSound) {
-    stageCompleteSound = new Audio('/audio/sfx/stage-complete.mp3');
+    stageCompleteSound = new Audio('/audio/sfx/stage-complete-new.mp3');
     stageCompleteSound.volume = 0.7;
   }
   return stageCompleteSound;
+};
+
+const getTapSound = (): HTMLAudioElement => {
+  if (!tapSound) {
+    tapSound = new Audio('/audio/sfx/tap.mp3');
+    tapSound.volume = 0.15;
+  }
+  return tapSound;
 };
 
 /**
@@ -51,6 +60,16 @@ export const playCorrectSound = (): void => {
 export const playStageCompleteSound = (): void => {
   if (!isSoundEnabled()) return;
   const sound = getStageCompleteSound();
+  sound.currentTime = 0;
+  sound.play().catch(console.error);
+};
+
+/**
+ * Play tap sound for bubble click
+ */
+export const playTapSound = (): void => {
+  if (!isSoundEnabled()) return;
+  const sound = getTapSound();
   sound.currentTime = 0;
   sound.play().catch(console.error);
 };
