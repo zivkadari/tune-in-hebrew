@@ -1,7 +1,8 @@
-import React from "react";
-import { Music, Play, RotateCcw, LayoutGrid, RefreshCw, Clock, Users } from "lucide-react";
+import React, { useState } from "react";
+import { Music, Play, RotateCcw, LayoutGrid, Clock, Users } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { StagesMenuDialog } from "@/components/StagesMenuDialog";
 import { useButtonFeedback } from "@/hooks/useButtonFeedback";
 
 interface HomeScreenProps {
@@ -28,6 +29,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onPartyMode,
 }) => {
   const { withFeedback } = useButtonFeedback();
+  const [showStagesMenu, setShowStagesMenu] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
@@ -38,14 +40,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-primary/5 rounded-full blur-2xl" />
       </div>
 
-      {/* Settings & Coins HUD - top */}
-      <div className="absolute top-6 left-6 safe-area-top flex items-center gap-3">
+      {/* Settings & Coins HUD - top with higher z-index */}
+      <div className="absolute top-6 left-6 safe-area-top flex items-center gap-3 z-20">
         <SettingsDialog onFullReset={onFullReset} />
         <CoinDisplay coins={coins} />
       </div>
 
-      {/* Main card */}
-      <div className="glass-card-glow p-8 sm:p-12 flex flex-col items-center gap-8 max-w-md w-full relative mt-16">
+      {/* Main card - increased top margin to avoid overlap */}
+      <div className="glass-card-glow p-8 sm:p-12 flex flex-col items-center gap-8 max-w-md w-full relative mt-24 z-10">
         {/* Glowing icon */}
         <div className="relative">
           {/* Glow effect behind icon */}
@@ -77,44 +79,36 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </p>
         </div>
 
-        {/* Buttons */}
+        {/* Buttons - 4 main options */}
         <div className="flex flex-col gap-4 w-full">
-          {isFirstTime ? (
-            <button 
-              onClick={withFeedback(onStart)} 
-              className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
-            >
-              <Play className="w-6 h-6" fill="currentColor" />
-              <span>התחל משחק</span>
-            </button>
-          ) : (
-            <>
-              <button 
-                onClick={withFeedback(onContinue)} 
-                className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
-              >
+          {/* כפתור ראשי: המשך/התחל משחק */}
+          <button 
+            onClick={withFeedback(isFirstTime ? onStart : onContinue)} 
+            className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-5"
+          >
+            {isFirstTime ? (
+              <>
+                <Play className="w-6 h-6" fill="currentColor" />
+                <span>התחל משחק</span>
+              </>
+            ) : (
+              <>
                 <RotateCcw className="w-6 h-6" />
                 <span>המשך משחק</span>
-              </button>
-              
-              <button 
-                onClick={withFeedback(onRestart)} 
-                className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
-              >
-                <RefreshCw className="w-5 h-5" />
-                <span>התחל מחדש</span>
-              </button>
-            </>
-          )}
+              </>
+            )}
+          </button>
 
+          {/* חידון בשלבים - פותח דיאלוג */}
           <button 
-            onClick={withFeedback(onLevels)} 
+            onClick={withFeedback(() => setShowStagesMenu(true))} 
             className="btn-secondary w-full flex items-center justify-center gap-3 py-4"
           >
             <LayoutGrid className="w-5 h-5" />
-            <span>שלבים</span>
+            <span>חידון בשלבים</span>
           </button>
 
+          {/* נחש כמה שיותר (Time Attack) */}
           <button 
             onClick={withFeedback(onTimeAttack)} 
             className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all
@@ -123,9 +117,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                        active:scale-[0.98]"
           >
             <Clock className="w-5 h-5" />
-            <span>⏱️ Time Attack יומי</span>
+            <span>נחש כמה שיותר</span>
           </button>
 
+          {/* משחק חברתי (Party Mode) */}
           <button 
             onClick={withFeedback(onPartyMode)} 
             className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all
@@ -134,15 +129,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                        active:scale-[0.98]"
           >
             <Users className="w-5 h-5" />
-            <span>🎉 מצב מסיבה</span>
+            <span>משחק חברתי</span>
           </button>
         </div>
       </div>
 
-      {/* Footer */}
-      <p className="absolute bottom-8 text-sm text-muted-foreground safe-area-bottom">
-        🎵 10 שירים ישראליים אהובים
-      </p>
+      {/* Stages Menu Dialog */}
+      <StagesMenuDialog
+        open={showStagesMenu}
+        onOpenChange={setShowStagesMenu}
+        onContinue={onContinue}
+        onRestart={onRestart}
+        onLevels={onLevels}
+      />
     </div>
   );
 };

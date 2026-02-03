@@ -25,6 +25,7 @@ const countHebrewLetters = (str: string): number => {
 const FORCED_QUESTION_TYPES: Record<number, 'song' | 'artist'> = {
   35: 'artist',  // "אם את עדיין אוהבת" → always ask artist (בועז שרעבי)
   38: 'song',    // "לכל אחד" → always ask song name
+  44: 'song',    // "נשימה" → always ask song name
 };
 
 // Determine question type and answer dynamically based on name lengths
