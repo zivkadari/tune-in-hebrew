@@ -1,70 +1,112 @@
 
 
-## תכנית: מניעת חזרה על שירים ב-"שחק שוב"
+## תוכנית: שלושה שינויים קטנים
 
-### הבעיה
-כאשר המשתמש לוחץ "שחק שוב" ב-Offline Party Mode, המשחק בוחר שירים חדשים באקראי מכל מאגר השירים - כולל שירים שכבר נוגנו במשחקים הקודמים באותו סשן.
+### שינוי 1: הסרת מספר כולל בשיר X/Y
 
-### הפתרון
-לשמור רשימה של שירים שכבר נוגנו (לפי ID), ובהתחלת משחק חדש לסנן אותם מהמאגר.
+**קובץ:** `src/screens/LevelScreen.tsx`
+
+**שורות 95-97** - שינוי מ:
+```tsx
+<div className="text-sm text-muted-foreground">
+  שיר {songNumber}/{totalLevels}
+</div>
+```
+ל:
+```tsx
+<div className="text-sm text-muted-foreground">
+  שיר {songNumber}
+</div>
+```
+
+**אופציונלי:** אפשר גם להסיר את ה-prop `totalLevels` מהממשק אם רוצים לנקות קוד מיותר.
 
 ---
 
-### שינויים בקובץ `src/hooks/useOfflineParty.ts`
+### שינוי 2: צליל סיום שלב שמח יותר
 
-#### 1. הוספת state לשירים שנוגנו
+**פעולות:**
+1. הוספת קובץ צליל חדש ב-`public/audio/sfx/stage-complete-new.mp3` - צליל חגיגי יותר (כמו קונפטי/זיקוקים קצרים)
+2. עדכון `src/lib/sounds.ts` לשימוש בקובץ החדש
+
+**שורה 32 ב-sounds.ts** - שינוי מ:
 ```typescript
-const [playedSongIds, setPlayedSongIds] = useState<Set<number>>(new Set());
+stageCompleteSound = new Audio('/audio/sfx/stage-complete.mp3');
+```
+ל:
+```typescript
+stageCompleteSound = new Audio('/audio/sfx/stage-complete-new.mp3');
 ```
 
-#### 2. שינוי פונקציית `startGame`
-לסנן שירים שכבר נוגנו:
+> **הערה:** יש להעלות קובץ mp3 חדש עם צליל שמח יותר (למשל fanfare/celebration קצר) לתיקייה `public/audio/sfx/`
+
+---
+
+### שינוי 3: צליל הקלדה בלחיצה על קוביות
+
+**פעולות:**
+
+1. **הוספת קובץ צליל** `public/audio/sfx/tap.mp3` - צליל קליק קצר וחלש
+
+2. **עדכון `src/lib/sounds.ts`** - הוספת פונקציה חדשה:
+
 ```typescript
-const startGame = useCallback(() => {
-  if (players.length < 2) return;
-  
-  // Filter out already played songs
-  const availableLevels = levels.filter(level => !playedSongIds.has(level.id));
-  
-  // If not enough songs available, reset the played list
-  if (availableLevels.length < settings.roundCount) {
-    setPlayedSongIds(new Set());
-    // Use all levels if we've exhausted available songs
-    const shuffledLevels = shuffleArray(levels);
-    // ... select songs
-  } else {
-    const shuffledLevels = shuffleArray(availableLevels);
-    // ... select songs
+// Lazy-load tap sound
+let tapSound: HTMLAudioElement | null = null;
+
+const getTapSound = (): HTMLAudioElement => {
+  if (!tapSound) {
+    tapSound = new Audio('/audio/sfx/tap.mp3');
+    tapSound.volume = 0.15; // נמוך כדי לא להפריע לשיר
   }
-  
-  // Add selected song IDs to played list
-  setPlayedSongIds(prev => {
-    const updated = new Set(prev);
-    selectedSongs.forEach(song => updated.add(song.id));
-    return updated;
-  });
-  
-  // ... rest of the function
-}, [players.length, settings.roundCount, playedSongIds]);
+  return tapSound;
+};
+
+/**
+ * Play tap sound for bubble click
+ */
+export const playTapSound = (): void => {
+  if (!isSoundEnabled()) return;
+  const sound = getTapSound();
+  sound.currentTime = 0;
+  sound.play().catch(console.error);
+};
 ```
 
-#### 3. שינוי פונקציית `resetGame`
-**לא** לאפס את `playedSongIds` - כדי שהזיכרון יישמר בין משחקים.
+3. **עדכון `src/components/LetterBubbles.tsx`**:
 
-#### 4. הוספת פונקציה חדשה `fullReset` (אופציונלי)
-לאיפוס מלא כולל השירים שנוגנו - לשימוש כשחוזרים לתפריט הראשי.
+```tsx
+import { playTapSound } from "@/lib/sounds";
+
+// בתוך ה-onClick:
+onClick={() => {
+  if (!bubble.used) {
+    playTapSound();
+    onBubbleClick(bubble.id);
+  }
+}}
+```
+
+4. **עדכון `src/components/DailyLetterBubbles.tsx`** באותו אופן
 
 ---
 
-### התנהגות צפויה
+### סיכום השינויים
 
-| פעולה | התנהגות |
-|-------|----------|
-| התחלת משחק ראשון | בוחר 10/15/20 שירים אקראיים |
-| "שחק שוב" | בוחר שירים חדשים שלא נוגנו עדיין |
-| אם נגמרו השירים | מאפס את הרשימה ומתחיל מחדש |
-| חזרה לתפריט | מאפס הכל כולל רשימת השירים |
+| קובץ | סוג שינוי |
+|------|-----------|
+| `src/screens/LevelScreen.tsx` | הסרת `/{totalLevels}` |
+| `src/lib/sounds.ts` | הוספת `playTapSound()` + שינוי קובץ stage-complete |
+| `src/components/LetterBubbles.tsx` | קריאה ל-`playTapSound()` |
+| `src/components/DailyLetterBubbles.tsx` | קריאה ל-`playTapSound()` |
+| `public/audio/sfx/tap.mp3` | קובץ חדש (צליל קליק) |
+| `public/audio/sfx/stage-complete-new.mp3` | קובץ חדש (צליל חגיגי) |
 
-### מספר השירים במאגר
-יש כ-46 שירים ב-`levels.ts`, כך שאפשר לשחק כ-4 משחקים של 10 סיבובים לפני שצריך לחזור על שירים.
+---
+
+### לגבי קבצי הצליל
+
+אצור קבצי mp3 באמצעות כלי ליצירת צלילים סינטטיים:
+- **tap.mp3** - צליל "פופ" קצר (~50ms)
+- **stage-complete-new.mp3** - פנפרה שמחה קצרה (~1-2 שניות)
 
