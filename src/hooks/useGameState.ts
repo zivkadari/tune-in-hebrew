@@ -21,12 +21,26 @@ const countHebrewLetters = (str: string): number => {
   return str.replace(/\s/g, '').length;
 };
 
+// Songs with forced question types
+const FORCED_QUESTION_TYPES: Record<number, 'song' | 'artist'> = {
+  35: 'artist',  // "אם את עדיין אוהבת" → always ask artist (בועז שרעבי)
+  38: 'song',    // "לכל אחד" → always ask song name
+};
+
 // Determine question type and answer dynamically based on name lengths
 const determineQuestionType = (
   songName: string, 
   artistName: string, 
   levelId: number
 ): { questionType: 'song' | 'artist'; answer: string } => {
+  // Check if this level has a forced question type
+  const forcedType = FORCED_QUESTION_TYPES[levelId];
+  if (forcedType) {
+    return forcedType === 'artist'
+      ? { questionType: 'artist', answer: artistName }
+      : { questionType: 'song', answer: songName };
+  }
+
   const songLetters = countHebrewLetters(songName);
   const artistLetters = countHebrewLetters(artistName);
   
