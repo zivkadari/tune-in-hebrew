@@ -38,7 +38,7 @@ const getStageCompleteSound = (): HTMLAudioElement => {
 
 const getTapSound = (): HTMLAudioElement => {
   if (!tapSound) {
-    tapSound = new Audio('/audio/sfx/tap.mp3');
+    tapSound = new Audio('/audio/sfx/Click_sound.m4a');
     tapSound.volume = 0.15;
   }
   return tapSound;
