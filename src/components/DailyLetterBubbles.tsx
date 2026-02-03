@@ -1,5 +1,6 @@
 import React from "react";
 import type { Bubble } from "@/types/dailyTimeAttack";
+import { playTapSound } from "@/lib/sounds";
 
 interface DailyLetterBubblesProps {
   bubbles: Bubble[];
@@ -15,7 +16,12 @@ export const DailyLetterBubbles: React.FC<DailyLetterBubblesProps> = ({
       {bubbles.map((bubble) => (
         <button
           key={bubble.id}
-          onClick={() => !bubble.isUsed && onBubbleClick(bubble.id)}
+          onClick={() => {
+            if (!bubble.isUsed) {
+              playTapSound();
+              onBubbleClick(bubble.id);
+            }
+          }}
           disabled={bubble.isUsed}
           className={`letter-bubble ${
             bubble.isUsed ? "letter-bubble-used" : "letter-bubble-active"

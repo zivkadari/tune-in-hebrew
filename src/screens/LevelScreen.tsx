@@ -93,7 +93,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
             שלב {stageNumber}
           </div>
           <div className="text-sm text-muted-foreground">
-            שיר {songNumber}/{totalLevels}
+            שיר {songNumber}
           </div>
         </div>
         
