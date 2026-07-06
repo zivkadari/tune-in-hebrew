@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, RefreshCw, Trophy, Globe, Users } from 'lucide-react';
 import { DailyLeaderboard } from '@/components/DailyLeaderboard';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_URL, supabase } from '@/integrations/supabase/client';
 import { getOrCreatePlayerId } from '@/lib/playerStorage';
 import { toast } from 'sonner';
 import type { LeaderboardEntry, Group } from '@/types/dailyTimeAttack';
@@ -44,7 +44,7 @@ export const EnhancedLeaderboardScreen: React.FC<EnhancedLeaderboardScreenProps>
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-all-time-leaderboard');
+      const url = new URL(`${SUPABASE_URL}/functions/v1/get-all-time-leaderboard`);
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export const EnhancedLeaderboardScreen: React.FC<EnhancedLeaderboardScreenProps>
         return;
       }
       
-      const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-group-leaderboard');
+      const url = new URL(`${SUPABASE_URL}/functions/v1/get-group-leaderboard`);
       url.searchParams.set('group_id', groupId);
       // No date = all-time
       
