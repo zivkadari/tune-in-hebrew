@@ -14,13 +14,234 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_songs: {
+        Row: {
+          answer: string
+          audio_url: string
+          created_at: string
+          id: number
+          is_active: boolean
+          pool_order: number | null
+          release_year: number
+          type: string
+        }
+        Insert: {
+          answer: string
+          audio_url: string
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          pool_order?: number | null
+          release_year: number
+          type: string
+        }
+        Update: {
+          answer?: string
+          audio_url?: string
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          pool_order?: number | null
+          release_year?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      daily_time_attack_runs: {
+        Row: {
+          completed_all_12: boolean
+          correct_count: number
+          created_at: string
+          date: string
+          effective_ms: number
+          elapsed_ms: number
+          id: string
+          player_id: string
+          run_type: string
+          skip_used: boolean
+          year_hint_used: boolean
+        }
+        Insert: {
+          completed_all_12?: boolean
+          correct_count?: number
+          created_at?: string
+          date: string
+          effective_ms: number
+          elapsed_ms: number
+          id?: string
+          player_id: string
+          run_type: string
+          skip_used?: boolean
+          year_hint_used?: boolean
+        }
+        Update: {
+          completed_all_12?: boolean
+          correct_count?: number
+          created_at?: string
+          date?: string
+          effective_ms?: number
+          elapsed_ms?: number
+          id?: string
+          player_id?: string
+          run_type?: string
+          skip_used?: boolean
+          year_hint_used?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_time_attack_runs_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_time_attack_sets: {
+        Row: {
+          created_at: string
+          date: string
+          pool_version: number
+          song_ids: number[]
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          pool_version?: number
+          song_ids: number[]
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          pool_version?: number
+          song_ids?: number[]
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          player_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          player_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          join_code: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          join_code?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          join_code?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          display_name: string
+          id: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      daily_songs_public: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          id: number | null
+          is_active: boolean | null
+          pool_order: number | null
+          release_year: number | null
+          type: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          pool_order?: number | null
+          release_year?: number | null
+          type?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          id?: number | null
+          is_active?: boolean | null
+          pool_order?: number | null
+          release_year?: number | null
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      is_group_member: {
+        Args: { _group_id: string; _player_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

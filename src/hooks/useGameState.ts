@@ -210,7 +210,7 @@ export const useGameState = () => {
     : 1;
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const pianoIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pianoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hintsUsedRef = useRef(false);
 
   // Keep ref in sync with state
