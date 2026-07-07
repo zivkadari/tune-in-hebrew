@@ -812,6 +812,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     runResult,
     globalLeaderboard,
     initialize,
+    retryInitialize,
+
     startRun,
     onBubbleClick,
     onSlotClick,
