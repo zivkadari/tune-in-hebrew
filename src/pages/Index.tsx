@@ -339,6 +339,8 @@ const Index = () => {
     return (
       <DailyTimeAttackHome
         isLoading={daily.isLoading}
+        initializationError={daily.initializationError}
+        onRetry={daily.retryInitialize}
         hasPlayedOfficialToday={daily.hasPlayedOfficialToday}
         onStartRun={handleStartDailyRun}
         onLeaderboard={handleShowLeaderboard}
@@ -347,6 +349,7 @@ const Index = () => {
       />
     );
   }
+
 
   if (dailyScreen === 'leaderboard' || dailyScreen === 'enhanced-leaderboard') {
     return (
