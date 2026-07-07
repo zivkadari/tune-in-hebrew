@@ -25,6 +25,7 @@ interface UseDailyTimeAttackReturn {
   // Player state
   playerId: string | null;
   isLoading: boolean;
+  initializationError: string | null;
   
   // Daily set
   dailySet: DailySet | null;
@@ -63,6 +64,7 @@ interface UseDailyTimeAttackReturn {
   
   // Actions
   initialize: () => Promise<void>;
+  retryInitialize: () => Promise<void>;
   startRun: (type: RunType) => void;
   onBubbleClick: (bubbleId: number) => void;
   onSlotClick: (slotId: number) => void;
@@ -73,6 +75,20 @@ interface UseDailyTimeAttackReturn {
   resetForNewRun: () => void;
   fetchLeaderboard: () => Promise<void>;
 }
+
+/**
+ * Race a promise against a timeout
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timeout: ${label}`)), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
 
 /**
  * Shuffle array using Fisher-Yates algorithm
@@ -142,7 +158,9 @@ function createSlotsAndBubbles(
 export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   // Player state
   const [playerId, setPlayerId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+
   
   // Daily set
   const [dailySet, setDailySet] = useState<DailySet | null>(null);
@@ -189,6 +207,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const yearHintUsedRef = useRef(false);
   const dailySetRef = useRef<DailySet | null>(null);
   const isCheckingRef = useRef(false);
+  const isInitializingRef = useRef(false);
+
 
   // Keep refs in sync with state
   useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);
@@ -202,28 +222,43 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
 
   /**
    * Initialize - load player ID and daily set
+   * - Guards against concurrent runs
+   * - Skips if already loaded successfully
+   * - Applies timeouts so the UI never spins forever
    */
   const initialize = useCallback(async () => {
+    // Concurrency guard
+    if (isInitializingRef.current) {
+      console.log('[useDailyTimeAttack] initialize() already in progress, skipping');
+      return;
+    }
+    isInitializingRef.current = true;
     setIsLoading(true);
+    setInitializationError(null);
+
     try {
-      // Get or create player (this also creates anonymous auth session)
-      const pid = await getOrCreatePlayerId();
+      // Get or create player with a 10s timeout
+      const pid = await withTimeout(getOrCreatePlayerId(), 10000, 'create player');
       setPlayerId(pid);
-      
-      // Fetch daily set from edge function
-      const { data, error } = await supabase.functions.invoke('get-daily-set');
-      
+
+      // Fetch daily set from edge function with a 15s timeout
+      const invokePromise = supabase.functions.invoke('get-daily-set');
+      const { data, error } = await withTimeout(invokePromise, 15000, 'get-daily-set');
+
       if (error) {
         console.error('Error fetching daily set:', error);
-        toast.error('שגיאה בטעינת האתגר היומי');
-        return;
+        throw new Error('שגיאה בטעינת האתגר היומי');
       }
-      
-      const dailySetData = data as DailySet;
+
+      const dailySetData = data as DailySet | null;
+      if (!dailySetData || !Array.isArray(dailySetData.songs) || dailySetData.songs.length !== 12) {
+        console.error('Invalid daily set:', dailySetData);
+        throw new Error('האתגר היומי לא הוחזר במלואו');
+      }
+
       setDailySet(dailySetData);
-      
-      // Check if player already played official today via edge function.
-      // This is best-effort: the daily home should still open when this check fails.
+
+      // Best-effort: check if player already played official today
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -231,13 +266,13 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
           const url = new URL(`${SUPABASE_URL}/functions/v1/get-player-run`);
           url.searchParams.set('date', dailySetData.date);
 
-          const runResponse = await fetch(url.toString(), {
+          const runResponse = await withTimeout(fetch(url.toString(), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session.access_token}`,
             },
-          });
+          }), 8000, 'get-player-run');
 
           if (!runResponse.ok) {
             console.warn('Unable to check existing daily run:', runResponse.status, runResponse.statusText);
@@ -252,14 +287,22 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       } catch (err) {
         console.warn('Unable to check existing daily run:', err);
       }
-      
     } catch (err) {
-      console.error('Error initializing:', err);
-      toast.error('שגיאה באתחול המשחק');
+      const message = err instanceof Error ? err.message : 'שגיאה באתחול המשחק';
+      console.error('Error initializing daily time attack:', err);
+      setInitializationError(message);
     } finally {
       setIsLoading(false);
+      isInitializingRef.current = false;
     }
   }, []);
+
+  const retryInitialize = useCallback(async () => {
+    setDailySet(null);
+    setInitializationError(null);
+    await initialize();
+  }, [initialize]);
+
 
   /**
    * Start a run (official or practice)
@@ -743,7 +786,9 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   return {
     playerId,
     isLoading,
+    initializationError,
     dailySet,
+
     hasPlayedOfficialToday,
     todayOfficialRun,
     isRunning,
@@ -767,6 +812,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
     runResult,
     globalLeaderboard,
     initialize,
+    retryInitialize,
+
     startRun,
     onBubbleClick,
     onSlotClick,

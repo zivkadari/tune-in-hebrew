@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Play, Trophy, Users, Home, CheckCircle, Dumbbell } from 'lucide-react';
+import { Clock, Play, Trophy, Users, Home, CheckCircle, Dumbbell, AlertTriangle } from 'lucide-react';
 import { PracticeWarningDialog } from '@/components/PracticeWarningDialog';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { useButtonFeedback } from '@/hooks/useButtonFeedback';
@@ -7,6 +7,8 @@ import type { RunType } from '@/types/dailyTimeAttack';
 
 interface DailyTimeAttackHomeProps {
   isLoading: boolean;
+  initializationError?: string | null;
+  onRetry?: () => void;
   hasPlayedOfficialToday: boolean;
   onStartRun: (type: RunType) => void;
   onLeaderboard: () => void;
@@ -16,6 +18,8 @@ interface DailyTimeAttackHomeProps {
 
 export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
   isLoading,
+  initializationError,
+  onRetry,
   hasPlayedOfficialToday,
   onStartRun,
   onLeaderboard,
@@ -42,6 +46,35 @@ export const DailyTimeAttackHome: React.FC<DailyTimeAttackHomeProps> = ({
       </div>
     );
   }
+
+  if (initializationError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 safe-area-top safe-area-bottom">
+        <div className="glass-card-glow p-8 flex flex-col items-center gap-5 max-w-md w-full text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/15 flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-destructive" />
+          </div>
+          <h1 className="text-2xl font-black">לא הצלחנו לטעון את האתגר היומי</h1>
+          <p className="text-sm text-muted-foreground">{initializationError}</p>
+          <div className="flex flex-col gap-3 w-full">
+            <button
+              onClick={withFeedback(() => onRetry?.())}
+              className="btn-primary w-full py-4"
+            >
+              נסה שוב
+            </button>
+            <button
+              onClick={withFeedback(onBack)}
+              className="btn-secondary w-full py-3"
+            >
+              חזרה למסך הבית
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">

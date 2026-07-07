@@ -59,17 +59,15 @@ interface DailySet {
 const SONGS_PER_DAY = 12;
 
 /**
- * Encrypt answer using AES-GCM
+ * Derive AES-GCM encryption key ONCE (PBKDF2 is expensive - never per-song)
  */
-async function encryptAnswer(plaintext: string): Promise<string> {
+async function deriveEncryptionKey(): Promise<CryptoKey> {
   const encryptionKey = Deno.env.get("ANSWER_ENCRYPTION_KEY");
   if (!encryptionKey) {
     throw new Error("Encryption key not configured");
   }
 
   const encoder = new TextEncoder();
-  
-  // Derive key using PBKDF2
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     encoder.encode(encryptionKey),
@@ -77,8 +75,8 @@ async function encryptAnswer(plaintext: string): Promise<string> {
     false,
     ["deriveKey"]
   );
-  
-  const key = await crypto.subtle.deriveKey(
+
+  return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: encoder.encode("tune-in-hebrew-salt"),
@@ -90,24 +88,28 @@ async function encryptAnswer(plaintext: string): Promise<string> {
     false,
     ["encrypt"]
   );
-  
-  // Generate random IV
+}
+
+/**
+ * Encrypt answer using AES-GCM with a pre-derived key
+ */
+async function encryptAnswerWithKey(plaintext: string, key: CryptoKey): Promise<string> {
+  const encoder = new TextEncoder();
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  
-  // Encrypt
+
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
     encoder.encode(plaintext)
   );
-  
-  // Combine IV + ciphertext and encode as base64
+
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(encrypted), iv.length);
-  
+
   return btoa(String.fromCharCode(...combined));
 }
+
 
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
@@ -224,12 +226,16 @@ Deno.serve(async (req: Request) => {
     }
 
     // Order songs according to songIds order and encrypt answers
+    // Derive encryption key ONCE for all songs (PBKDF2 is expensive)
+    const encryptionKey = await deriveEncryptionKey();
+
     const orderedSongs: DailySong[] = [];
     for (const id of songIds) {
       const song = songs!.find(s => s.id === id);
       if (song) {
-        // Encrypt the answer before sending to client
-        const encryptedAnswer = await encryptAnswer(song.answer);
+        // Encrypt with the shared derived key (fast per-song)
+        const encryptedAnswer = await encryptAnswerWithKey(song.answer, encryptionKey);
+
         
         // Calculate answer pattern (word lengths) without revealing the answer
         const words = song.answer.split(' ').filter((w: string) => w.length > 0);

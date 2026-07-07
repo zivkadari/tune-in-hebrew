@@ -156,12 +156,12 @@ const Index = () => {
     setShowWelcomeDialog(false);
   }, []);
 
-  // Initialize daily mode when entering
+  // Initialize daily mode when entering - single source of truth
   useEffect(() => {
-    if (dailyScreen === 'daily-home' && !daily.dailySet) {
+    if (dailyScreen === 'daily-home' && !daily.dailySet && !daily.isLoading && !daily.initializationError) {
       daily.initialize();
     }
-  }, [dailyScreen, daily.dailySet, daily.initialize]);
+  }, [dailyScreen, daily.dailySet, daily.isLoading, daily.initializationError, daily.initialize]);
 
   // Handle entering Daily Time Attack mode
   const handleOpenTimeAttack = useCallback(() => {
@@ -169,9 +169,8 @@ const Index = () => {
       setShowTutorialOffer(true);
     } else {
       setDailyScreen('daily-home');
-      daily.initialize();
     }
-  }, [daily]);
+  }, []);
 
   // Handle tutorial responses
   const handleTutorialAccept = useCallback(() => {
@@ -183,15 +182,14 @@ const Index = () => {
     setShowTutorialOffer(false);
     markTutorialCompleted();
     setDailyScreen('daily-home');
-    daily.initialize();
-  }, [daily]);
+  }, []);
 
   const handleTutorialComplete = useCallback(() => {
     markTutorialCompleted();
     setShowTutorial(false);
     setDailyScreen('daily-home');
-    daily.initialize();
-  }, [daily]);
+  }, []);
+
 
   // Classic Mode Tutorial handlers
   const handleStartClassicGame = useCallback(() => {
@@ -341,6 +339,8 @@ const Index = () => {
     return (
       <DailyTimeAttackHome
         isLoading={daily.isLoading}
+        initializationError={daily.initializationError}
+        onRetry={daily.retryInitialize}
         hasPlayedOfficialToday={daily.hasPlayedOfficialToday}
         onStartRun={handleStartDailyRun}
         onLeaderboard={handleShowLeaderboard}
@@ -349,6 +349,7 @@ const Index = () => {
       />
     );
   }
+
 
   if (dailyScreen === 'leaderboard' || dailyScreen === 'enhanced-leaderboard') {
     return (
