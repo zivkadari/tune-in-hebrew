@@ -18,7 +18,6 @@ export const setSoundEnabled = (enabled: boolean): void => {
 // Lazy-load audio to avoid issues on mobile
 let correctSound: HTMLAudioElement | null = null;
 let stageCompleteSound: HTMLAudioElement | null = null;
-let tapSound: HTMLAudioElement | null = null;
 
 const getCorrectSound = (): HTMLAudioElement => {
   if (!correctSound) {
@@ -34,14 +33,6 @@ const getStageCompleteSound = (): HTMLAudioElement => {
     stageCompleteSound.volume = 0.7;
   }
   return stageCompleteSound;
-};
-
-const getTapSound = (): HTMLAudioElement => {
-  if (!tapSound) {
-    tapSound = new Audio('/audio/sfx/Click_sound.m4a');
-    tapSound.volume = 0.15;
-  }
-  return tapSound;
 };
 
 /**
@@ -64,12 +55,7 @@ export const playStageCompleteSound = (): void => {
   sound.play().catch(console.error);
 };
 
-/**
- * Play tap sound for bubble click
- */
+/** Kept as a silent compatibility hook for existing letter-bubble callers. */
 export const playTapSound = (): void => {
-  if (!isSoundEnabled()) return;
-  const sound = getTapSound();
-  sound.currentTime = 0;
-  sound.play().catch(console.error);
+  // Tap feedback is intentionally visual/haptic only.
 };
