@@ -158,7 +158,9 @@ function createSlotsAndBubbles(
 export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   // Player state
   const [playerId, setPlayerId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+
   
   // Daily set
   const [dailySet, setDailySet] = useState<DailySet | null>(null);
