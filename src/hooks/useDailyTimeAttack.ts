@@ -207,6 +207,8 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   const yearHintUsedRef = useRef(false);
   const dailySetRef = useRef<DailySet | null>(null);
   const isCheckingRef = useRef(false);
+  const isInitializingRef = useRef(false);
+
 
   // Keep refs in sync with state
   useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);
