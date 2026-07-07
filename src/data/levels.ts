@@ -17,7 +17,8 @@ export const getSongNumberInStage = (songId: number): number => {
 
 export const getTotalStages = (totalSongs: number): number => Math.ceil(totalSongs / SONGS_PER_STAGE);
 
-export const isLastSongInStage = (songId: number): boolean => songId % SONGS_PER_STAGE === 0;
+export const isLastSongInStage = (songId: number): boolean =>
+  songId % SONGS_PER_STAGE === 0 || songId === levels.length;
 
 export const levels: Level[] = [
   // Stage 1 (1-12)
