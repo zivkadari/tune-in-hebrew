@@ -786,7 +786,9 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
   return {
     playerId,
     isLoading,
+    initializationError,
     dailySet,
+
     hasPlayedOfficialToday,
     todayOfficialRun,
     isRunning,
