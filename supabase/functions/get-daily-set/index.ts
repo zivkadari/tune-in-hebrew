@@ -226,12 +226,16 @@ Deno.serve(async (req: Request) => {
     }
 
     // Order songs according to songIds order and encrypt answers
+    // Derive encryption key ONCE for all songs (PBKDF2 is expensive)
+    const encryptionKey = await deriveEncryptionKey();
+
     const orderedSongs: DailySong[] = [];
     for (const id of songIds) {
       const song = songs!.find(s => s.id === id);
       if (song) {
-        // Encrypt the answer before sending to client
-        const encryptedAnswer = await encryptAnswer(song.answer);
+        // Encrypt with the shared derived key (fast per-song)
+        const encryptedAnswer = await encryptAnswerWithKey(song.answer, encryptionKey);
+
         
         // Calculate answer pattern (word lengths) without revealing the answer
         const words = song.answer.split(' ').filter((w: string) => w.length > 0);
