@@ -25,6 +25,7 @@ interface UseDailyTimeAttackReturn {
   // Player state
   playerId: string | null;
   isLoading: boolean;
+  initializationError: string | null;
   
   // Daily set
   dailySet: DailySet | null;
@@ -63,6 +64,7 @@ interface UseDailyTimeAttackReturn {
   
   // Actions
   initialize: () => Promise<void>;
+  retryInitialize: () => Promise<void>;
   startRun: (type: RunType) => void;
   onBubbleClick: (bubbleId: number) => void;
   onSlotClick: (slotId: number) => void;
@@ -73,6 +75,20 @@ interface UseDailyTimeAttackReturn {
   resetForNewRun: () => void;
   fetchLeaderboard: () => Promise<void>;
 }
+
+/**
+ * Race a promise against a timeout
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timeout: ${label}`)), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
 
 /**
  * Shuffle array using Fisher-Yates algorithm
