@@ -297,9 +297,9 @@ const Index = () => {
   }, [offlineParty]);
 
   // Handle showing leaderboard
-  const handleShowLeaderboard = useCallback(async () => {
-    await daily.fetchLeaderboard();
+  const handleShowLeaderboard = useCallback(() => {
     setDailyScreen('leaderboard');
+    void daily.fetchLeaderboard();
   }, [daily]);
 
   // Effect to detect when run ends (isRunning becomes false while on run screen)

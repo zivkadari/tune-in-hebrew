@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_URL, supabase } from '@/integrations/supabase/client';
 import { getOrCreatePlayerId, getPlayerId } from '@/lib/playerStorage';
 import type { 
   DailySong, 
@@ -222,28 +222,35 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
       const dailySetData = data as DailySet;
       setDailySet(dailySetData);
       
-      // Check if player already played official today via edge function
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-player-run');
-        url.searchParams.set('date', dailySetData.date);
-        
-        const runResponse = await fetch(url.toString(), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        });
-        
-        if (runResponse.ok) {
-          const runResult = await runResponse.json();
-          if (runResult.run) {
-            setHasPlayedOfficialToday(true);
-            setTodayOfficialRun(runResult.run as DailyRun);
+      // Check if player already played official today via edge function.
+      // This is best-effort: the daily home should still open when this check fails.
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session) {
+          const url = new URL(`${SUPABASE_URL}/functions/v1/get-player-run`);
+          url.searchParams.set('date', dailySetData.date);
+
+          const runResponse = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          });
+
+          if (!runResponse.ok) {
+            console.warn('Unable to check existing daily run:', runResponse.status, runResponse.statusText);
+          } else {
+            const runResult = await runResponse.json();
+            if (runResult.run) {
+              setHasPlayedOfficialToday(true);
+              setTodayOfficialRun(runResult.run as DailyRun);
+            }
           }
         }
+      } catch (err) {
+        console.warn('Unable to check existing daily run:', err);
       }
       
     } catch (err) {
@@ -451,38 +458,47 @@ export function useDailyTimeAttack(): UseDailyTimeAttackReturn {
    */
   const fetchLeaderboard = useCallback(async () => {
     if (!dailySet) return;
-    
-    const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-leaderboard');
-    url.searchParams.set('date', dailySet.date);
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
+
+    try {
+      const url = new URL(`${SUPABASE_URL}/functions/v1/get-leaderboard`);
+      url.searchParams.set('date', dailySet.date);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        console.error('Error fetching leaderboard:', response.status, response.statusText);
+        return;
+      }
+
+      let result: { error?: string; leaderboard?: LeaderboardEntry[] };
+      try {
+        result = await response.json();
+      } catch (err) {
+        console.error('Error parsing leaderboard response:', err);
+        return;
+      }
+
+      if (result.error) {
+        console.error('Error fetching leaderboard:', result.error);
+        return;
+      }
+
+      setGlobalLeaderboard(result.leaderboard || []);
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
     }
-    
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers,
-    });
-    
-    if (!response.ok) {
-      console.error('Error fetching leaderboard:', response.statusText);
-      return;
-    }
-    
-    const result = await response.json();
-    
-    if (result.error) {
-      console.error('Error fetching leaderboard:', result.error);
-      return;
-    }
-    
-    setGlobalLeaderboard(result.leaderboard || []);
   }, [dailySet]);
 
   /**

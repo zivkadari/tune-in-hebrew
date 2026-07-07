@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Copy, Check, Crown, Trash2, Users, RefreshCw, LogOut, AlertTriangle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_URL, supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { leaveGroup } from '@/lib/playerStorage';
@@ -56,7 +56,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({ groupId, o
     setIsLoading(true);
     
     try {
-      const url = new URL('https://nltdspmkogjsnnywqzke.supabase.co/functions/v1/get-group-members');
+      const url = new URL(`${SUPABASE_URL}/functions/v1/get-group-members`);
       url.searchParams.set('group_id', groupId);
       
       const { data: { session } } = await supabase.auth.getSession();
