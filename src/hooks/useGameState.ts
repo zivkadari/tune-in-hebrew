@@ -23,9 +23,9 @@ const countHebrewLetters = (str: string): number => {
 
 // Songs with forced question types
 const FORCED_QUESTION_TYPES: Record<number, 'song' | 'artist'> = {
-  35: 'artist',  // "אם את עדיין אוהבת" → always ask artist (בועז שרעבי)
-  38: 'song',    // "לכל אחד" → always ask song name
-  44: 'song',    // "נשימה" → always ask song name
+  39: 'artist',  // "אם את עדיין אוהבת" → always ask artist (בועז שרעבי)
+  42: 'song',    // "לכל אחד" → always ask song name
+  48: 'song',    // "נשימה" → always ask song name
 };
 
 // Determine question type and answer dynamically based on name lengths
@@ -99,6 +99,8 @@ interface GameState {
 const STORAGE_KEY = "guess-the-song-state";
 const HIDE_NOTICE_KEY = "hide-new-game-notice";
 const LEVEL_PROGRESS_KEY = "level-progress";
+const CATALOG_VERSION_KEY = "classic-catalog-version";
+const CURRENT_CATALOG_VERSION = "55-song-refresh-v1";
 
 interface LevelProgress {
   slots: Slot[];
@@ -128,7 +130,51 @@ const clearLevelProgress = (levelId: number) => {
   localStorage.removeItem(`${LEVEL_PROGRESS_KEY}-${levelId}`);
 };
 
+const migrateClassicCatalogState = () => {
+  try {
+    if (localStorage.getItem(CATALOG_VERSION_KEY) === CURRENT_CATALOG_VERSION) {
+      return;
+    }
+
+    let coins = 0;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.coins === "number") {
+          coins = parsed.coins;
+        }
+      } catch (e) {
+        console.warn("Could not read Classic coins during catalog migration:", e);
+      }
+    }
+
+    const migratedState: GameState = {
+      coins,
+      currentLevelId: 1,
+      completedLevelIds: [],
+      hintsUsedByLevel: {},
+    };
+
+    const progressKeys: string[] = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key?.startsWith(`${LEVEL_PROGRESS_KEY}-`)) {
+        progressKeys.push(key);
+      }
+    }
+
+    progressKeys.forEach((key) => localStorage.removeItem(key));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedState));
+    localStorage.setItem(CATALOG_VERSION_KEY, CURRENT_CATALOG_VERSION);
+  } catch (e) {
+    console.error("Failed to migrate Classic catalog state:", e);
+  }
+};
+
 const loadGameState = (): GameState => {
+  migrateClassicCatalogState();
+
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
