@@ -561,6 +561,8 @@ const Index = () => {
         coins={gameState.coins}
         songName={currentLevel.songName}
         artistName={currentLevel.artistName}
+        coverArtUrl={currentLevel.coverArtUrl}
+        coverVerified={currentLevel.coverVerified}
         onNextLevel={nextLevel}
         onHome={goHome}
         isLastLevel={currentLevel.id >= totalLevels}

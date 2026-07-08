@@ -1,6 +1,43 @@
 import React from "react";
 import { Trophy, ArrowLeft, Home, Youtube } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
+import { SongCoverArt } from "@/components/SongCoverArt";
+
+interface SuccessArtworkProps {
+  songName: string;
+  artistName: string;
+  coverArtUrl?: string;
+  coverVerified?: boolean;
+}
+
+const SuccessArtwork: React.FC<SuccessArtworkProps> = ({
+  songName,
+  artistName,
+  coverArtUrl,
+  coverVerified,
+}) => {
+  return (
+    <div className="relative animate-success-glow">
+      <div
+        className="absolute inset-0 rounded-[2rem] bg-success/30 blur-2xl"
+        aria-hidden="true"
+      />
+      <SongCoverArt
+        songName={songName}
+        artistName={artistName}
+        coverArtUrl={coverArtUrl}
+        coverVerified={coverVerified}
+        className="h-32 w-32 sm:h-36 sm:w-36"
+      />
+      <div
+        className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-success text-white shadow-lg"
+        aria-hidden="true"
+      >
+        <Trophy className="h-5 w-5" />
+      </div>
+    </div>
+  );
+};
 
 interface SuccessScreenProps {
   songNumber: number;
@@ -9,6 +46,8 @@ interface SuccessScreenProps {
   coins: number;
   songName: string;
   artistName: string;
+  coverArtUrl?: string;
+  coverVerified?: boolean;
   onNextLevel: () => void;
   onHome: () => void;
   isLastLevel: boolean;
@@ -24,6 +63,8 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   coins,
   songName,
   artistName,
+  coverArtUrl,
+  coverVerified,
   onNextLevel,
   onHome,
   isLastLevel,
@@ -54,27 +95,13 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
       </div>
 
       {/* Main content */}
-      <div className="glass-card-glow p-8 sm:p-12 flex flex-col items-center gap-8 max-w-md w-full">
-        {/* Trophy with glow */}
-        <div className="relative animate-success-glow">
-          {/* Glow effect */}
-          <div 
-            className="absolute inset-0 rounded-full blur-2xl opacity-70"
-            style={{ 
-              background: 'radial-gradient(circle, hsl(145 70% 45% / 0.5) 0%, transparent 70%)',
-              transform: 'scale(1.5)'
-            }}
-          />
-          <div 
-            className="w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center relative"
-            style={{
-              background: 'linear-gradient(145deg, hsl(145 70% 50%), hsl(145 65% 40%))',
-              boxShadow: '0 8px 40px hsl(145 70% 45% / 0.5), inset 0 2px 0 hsl(145 80% 70% / 0.4)'
-            }}
-          >
-            <Trophy className="w-14 h-14 sm:w-18 sm:h-18 text-white" />
-          </div>
-        </div>
+      <div className="glass-card-glow p-6 sm:p-10 flex flex-col items-center gap-5 sm:gap-7 max-w-md w-full">
+        <SuccessArtwork
+          songName={songName}
+          artistName={artistName}
+          coverArtUrl={coverArtUrl}
+          coverVerified={coverVerified}
+        />
 
         {/* Success message */}
         <div className="text-center">
