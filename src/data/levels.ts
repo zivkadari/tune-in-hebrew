@@ -1,4 +1,9 @@
-export interface Level {
+import {
+  songCoverMetadataById,
+  type SongCoverMetadata,
+} from "@/data/songCoverMetadata";
+
+export interface Level extends SongCoverMetadata {
   id: number;
   songName: string;
   artistName: string;
@@ -85,4 +90,7 @@ export const levels: Level[] = [
   { id: 53, songName: "שמים", artistName: "יגאל בשן", audioUrl: "/audio/level_new51.m4a", releaseYear: 2013 },
   { id: 54, songName: "אייכה", artistName: "שולי רנד", audioUrl: "/audio/level_new52.m4a", releaseYear: 2008 },
   { id: 55, songName: "ביום שניפגש", artistName: "דודו אהרון", audioUrl: "/audio/level_new53.m4a", releaseYear: 2016 },
-];
+].map((level) => ({
+  ...level,
+  ...songCoverMetadataById[level.id],
+}));

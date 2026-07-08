@@ -134,13 +134,7 @@ export function useOfflineParty(): UseOfflinePartyReturn {
     const shuffledLevels = shuffleArray(availableLevels);
     const selectedSongs: PartySong[] = shuffledLevels
       .slice(0, settings.roundCount)
-      .map(level => ({
-        id: level.id,
-        songName: level.songName,
-        artistName: level.artistName,
-        audioUrl: level.audioUrl,
-        releaseYear: level.releaseYear,
-      }));
+      .map(level => ({ ...level }));
     
     // Update played song IDs
     setPlayedSongIds(prev => {

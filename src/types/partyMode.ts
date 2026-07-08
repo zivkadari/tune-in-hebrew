@@ -1,3 +1,5 @@
+import type { Level } from '@/data/levels';
+
 // Party Mode Types
 
 export type QuestionType = 'song' | 'artist';
@@ -8,13 +10,7 @@ export interface PartyPlayer {
   score: number;
 }
 
-export interface PartySong {
-  id: number;
-  songName: string;
-  artistName: string;
-  audioUrl: string;
-  releaseYear: number;
-}
+export type PartySong = Level;
 
 // Offline Party Types
 export interface OfflinePartySettings {
