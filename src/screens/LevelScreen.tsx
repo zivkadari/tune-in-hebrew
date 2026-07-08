@@ -100,6 +100,17 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         <CoinDisplay coins={coins} />
       </header>
 
+      {/* Feedback floats outside the game layout so one or two lines never shift controls. */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        dir="rtl"
+        className="pointer-events-none fixed inset-x-4 top-[calc(env(safe-area-inset-top)+8rem)] z-50 mx-auto max-w-[520px] leading-snug [&_.message-card]:w-full [&_.message-card]:shadow-xl"
+      >
+        <MessageDisplay message={message} type={messageType} />
+      </div>
+
       {/* Main content */}
       <main className="flex-1 flex flex-col items-center px-4 gap-5 pb-4">
         {/* Piano in card - centered at top */}
@@ -143,11 +154,6 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         {/* Letter slots */}
         <div className="w-full max-w-[520px]">
           <LetterSlots slots={slots} onSlotClick={onSlotClick} />
-        </div>
-
-        {/* Message */}
-        <div className="w-full max-w-[520px]">
-          <MessageDisplay message={message} type={messageType} />
         </div>
 
         {/* Action buttons in bar */}
