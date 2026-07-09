@@ -4,6 +4,7 @@ import { useButtonFeedback } from '@/hooks/useButtonFeedback';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { Piano } from '@/components/Piano';
 import { SongCoverArt } from '@/components/SongCoverArt';
+import { SongPlatformLinks } from '@/components/SongPlatformLinks';
 import type { PartyPlayer, PartySong, QuestionType } from '@/types/partyMode';
 
 interface OfflinePartyRoundProps {
@@ -188,21 +189,34 @@ export const OfflinePartyRound: React.FC<OfflinePartyRoundProps> = ({
             <span>חשיפת התשובה</span>
           </button>
         ) : (
-          <div className="flex items-center justify-center gap-4">
-            <SongCoverArt
-              songName={currentSong.songName}
-              artistName={currentSong.artistName}
-              coverArtUrl={currentSong.coverArtUrl}
-              coverVerified={currentSong.coverVerified}
-              className="h-24 w-24 shrink-0 rounded-2xl"
-            />
-            <div className="space-y-2 text-right">
-              <div className="text-sm text-muted-foreground">התשובה הנכונה:</div>
-              <div className="text-2xl font-black text-primary">{correctAnswer}</div>
-              <div className="text-sm text-muted-foreground">
-                {questionType === 'song' ? currentSong.artistName : currentSong.songName} • {currentSong.releaseYear}
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-4">
+              <SongCoverArt
+                songName={currentSong.songName}
+                artistName={currentSong.artistName}
+                coverArtUrl={currentSong.coverArtUrl}
+                coverVerified={currentSong.coverVerified}
+                className="h-24 w-24 shrink-0 rounded-2xl"
+              />
+              <div className="space-y-2 text-right">
+                <div className="text-sm text-muted-foreground">התשובה הנכונה:</div>
+                <div className="text-2xl font-black text-primary">{correctAnswer}</div>
+                <div className="text-sm text-muted-foreground">
+                  {questionType === 'song' ? currentSong.artistName : currentSong.songName} • {currentSong.releaseYear}
+                </div>
               </div>
             </div>
+            <SongPlatformLinks
+              songName={currentSong.songName}
+              artistName={currentSong.artistName}
+              youtubeUrl={currentSong.youtubeUrl}
+              youtubeVerified={currentSong.youtubeVerified}
+              youtubeSearchUrl={currentSong.youtubeSearchUrl}
+              appleMusicUrl={currentSong.appleMusicUrl}
+              spotifyUrl={currentSong.spotifyUrl}
+              spotifyStatus={currentSong.spotifyStatus}
+              compact
+            />
           </div>
         )}
       </div>

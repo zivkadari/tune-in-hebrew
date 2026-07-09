@@ -4,8 +4,13 @@ export interface SongCoverMetadata {
   coverArtUrl?: string;
   coverVerified?: boolean;
   coverType?: CoverType;
+  youtubeUrl?: string;
+  youtubeVerified?: boolean;
+  youtubeSearchUrl?: string;
   appleMusicUrl?: string;
   appleMusicId?: string;
+  spotifyUrl?: string;
+  spotifyStatus?: string;
   studioAlbum?: string;
 }
 
@@ -62,7 +67,7 @@ export const songCoverMetadataById: Record<number, SongCoverMetadata> = {
   50: { coverArtUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/f2/ac/0e/f2ac0eea-485d-a8ea-3720-49b68f22ec95/7290115396249.png/1000x1000bb.jpg", coverVerified: true, coverType: "album", appleMusicUrl: "https://music.apple.com/il/album/%D7%92%D7%95%D7%9C%D7%99%D7%AA/1597899275?i=1597899516&l=he", appleMusicId: "1597899516", studioAlbum: "צפוף באוזן" },
   51: { coverArtUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/d5/d4/83/d5d48312-84b9-d23f-425b-5ef863d67dbd/cover.jpg/1000x1000bb.jpg", coverVerified: true, coverType: "album", appleMusicUrl: "https://music.apple.com/il/album/%D7%9C%D7%90-%D7%9C%D7%94%D7%99%D7%95%D7%AA-%D7%9C%D7%91%D7%93/1589079360?i=1589079569&l=he", appleMusicId: "1589079569", studioAlbum: "לא להיות לבד" },
   52: { coverArtUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/27/4f/b2/274fb2ee-706e-91a6-eae5-ba44fd34e930/asset.jpg/1000x1000bb.jpg", coverVerified: true, coverType: "album", appleMusicUrl: "https://music.apple.com/il/album/%D7%A0%D7%99%D7%A6%D7%97%D7%AA-%D7%90%D7%99%D7%AA%D7%99-%D7%94%D7%9B%D7%9C-%D7%9E%D7%95%D7%A1%D7%99%D7%A7%D7%94/782950042?i=782950043&l=he", appleMusicId: "782950043", studioAlbum: "ניצחת איתי הכל" },
-  53: { coverVerified: false, coverType: "placeholder", studioAlbum: "none_found" },
+  53: { coverVerified: false, coverType: "placeholder", appleMusicUrl: "https://music.apple.com/il/album/shamaim-%D7%A9%D7%9E%D7%99%D7%9D/689724184?i=689724260&l=he", appleMusicId: "689724260", studioAlbum: "none_found" },
   54: { coverArtUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/9a/19/a1/9a19a153-6b42-2698-69d6-915db8f4334f/cover.jpg/1000x1000bb.jpg", coverVerified: true, coverType: "album", appleMusicUrl: "https://music.apple.com/il/album/ayeka/1202987344?i=1202987444&l=he", appleMusicId: "1202987444", studioAlbum: "נקודה טובה" },
   55: { coverArtUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/0f/05/97/0f0597d4-0342-6a46-10dd-649d8d187fc6/7290015069069.png/1000x1000bb.jpg", coverVerified: true, coverType: "album", appleMusicUrl: "https://music.apple.com/il/album/%D7%91%D7%99%D7%95%D7%9D-%D7%A9%D7%A0%D7%A4%D7%92%D7%A9/1451514583?i=1451514588&l=he", appleMusicId: "1451514588", studioAlbum: "ימים טובים" },
 };
