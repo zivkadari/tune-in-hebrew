@@ -563,6 +563,12 @@ const Index = () => {
         artistName={currentLevel.artistName}
         coverArtUrl={currentLevel.coverArtUrl}
         coverVerified={currentLevel.coverVerified}
+        youtubeUrl={currentLevel.youtubeUrl}
+        youtubeVerified={currentLevel.youtubeVerified}
+        youtubeSearchUrl={currentLevel.youtubeSearchUrl}
+        appleMusicUrl={currentLevel.appleMusicUrl}
+        spotifyUrl={currentLevel.spotifyUrl}
+        spotifyStatus={currentLevel.spotifyStatus}
         onNextLevel={nextLevel}
         onHome={goHome}
         isLastLevel={currentLevel.id >= totalLevels}

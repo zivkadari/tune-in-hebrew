@@ -1,7 +1,8 @@
 import React from "react";
-import { Trophy, ArrowLeft, Home, Youtube } from "lucide-react";
+import { Trophy, ArrowLeft, Home } from "lucide-react";
 import { CoinDisplay } from "@/components/CoinDisplay";
 import { SongCoverArt } from "@/components/SongCoverArt";
+import { SongPlatformLinks } from "@/components/SongPlatformLinks";
 
 interface SuccessArtworkProps {
   songName: string;
@@ -48,6 +49,12 @@ interface SuccessScreenProps {
   artistName: string;
   coverArtUrl?: string;
   coverVerified?: boolean;
+  youtubeUrl?: string;
+  youtubeVerified?: boolean;
+  youtubeSearchUrl?: string;
+  appleMusicUrl?: string;
+  spotifyUrl?: string;
+  spotifyStatus?: string;
   onNextLevel: () => void;
   onHome: () => void;
   isLastLevel: boolean;
@@ -65,6 +72,12 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   artistName,
   coverArtUrl,
   coverVerified,
+  youtubeUrl,
+  youtubeVerified,
+  youtubeSearchUrl,
+  appleMusicUrl,
+  spotifyUrl,
+  spotifyStatus,
   onNextLevel,
   onHome,
   isLastLevel,
@@ -76,9 +89,6 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   const baseReward = isFirstTimeCompletion ? 10 : 0;
   const noHintBonus = isFirstTimeCompletion && !usedHints ? 5 : 0;
   const totalReward = baseReward + noHintBonus;
-  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
-    `${artistName} ${songName} official`
-  )}`;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden safe-area-top safe-area-bottom">
@@ -166,16 +176,16 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
 
         {/* Buttons */}
         <div className="flex flex-col gap-4 w-full">
-          <a
-            href={youtubeSearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-3 rounded-2xl border border-primary/35 bg-gradient-to-b from-primary/10 to-black/20 px-6 py-4 font-bold text-foreground shadow-lg shadow-black/20 transition-all duration-200 active:scale-[0.98]"
-            aria-label={`פתח ביוטיוב: ${artistName} – ${songName}`}
-          >
-            <Youtube className="w-6 h-6 text-red-500" fill="currentColor" aria-hidden="true" />
-            <span>פתח ביוטיוב</span>
-          </a>
+          <SongPlatformLinks
+            songName={songName}
+            artistName={artistName}
+            youtubeUrl={youtubeUrl}
+            youtubeVerified={youtubeVerified}
+            youtubeSearchUrl={youtubeSearchUrl}
+            appleMusicUrl={appleMusicUrl}
+            spotifyUrl={spotifyUrl}
+            spotifyStatus={spotifyStatus}
+          />
 
           {!isLastLevel ? (
             <button 
