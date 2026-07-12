@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "qa:platform-links": "node scripts/run-platform-links-qa.mjs",
+    "audit:youtube-links": "node scripts/audit-youtube-links.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
