@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "qa:platform-links": "node scripts/run-platform-links-qa.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
