@@ -7,6 +7,7 @@ import { songCoverMetadataById } from "@/data/songCoverMetadata";
 import { SongPlatformLinks } from "@/components/SongPlatformLinks";
 import { SuccessScreen } from "@/screens/SuccessScreen";
 import { OfflinePartyRound } from "@/screens/OfflinePartyRound";
+import { approvedPlatformLinksFixture } from "./fixtures/platform-links-approved";
 
 type AnchorMap = {
   youtube?: string;
@@ -14,63 +15,8 @@ type AnchorMap = {
   appleMusic?: string;
 };
 
-const expectedYoutubeUrlsById: Record<number, string> = {
-  1: "https://www.youtube.com/watch?v=oKLLyDOczbY",
-  2: "https://www.youtube.com/watch?v=kmW2yAYhMmM",
-  3: "https://www.youtube.com/watch?v=_xsI9tgyj1A",
-  4: "https://www.youtube.com/watch?v=bhNYlOt00uw",
-  5: "https://www.youtube.com/watch?v=ZOf7aMbzQAM",
-  6: "https://www.youtube.com/watch?v=7nVoHd4iFuw",
-  7: "https://www.youtube.com/watch?v=990F-bdP_k4",
-  8: "https://www.youtube.com/watch?v=jlCNqyY-fAk",
-  9: "https://www.youtube.com/watch?v=isCbysjdcQ0",
-  10: "https://www.youtube.com/watch?v=dZWlObNQoZ4",
-  11: "https://www.youtube.com/watch?v=lf72w9CMB-I",
-  12: "https://www.youtube.com/watch?v=GQWKEP0qOfE",
-  13: "https://www.youtube.com/watch?v=6U_5KhaH6IM",
-  14: "https://www.youtube.com/watch?v=Iay1xdXljb4",
-  15: "https://www.youtube.com/watch?v=ImMFBmqIPOc",
-  16: "https://www.youtube.com/watch?v=zRIn7W-kXhs",
-  17: "https://www.youtube.com/watch?v=qvdQ4mGMVkg",
-  18: "https://www.youtube.com/watch?v=pzAmYC7Xxtw",
-  19: "https://www.youtube.com/watch?v=yRZm0shwfw8",
-  20: "https://www.youtube.com/watch?v=aAManNYfWgU",
-  21: "https://www.youtube.com/watch?v=K1nQX_hdop0",
-  22: "https://www.youtube.com/watch?v=bzZtDkMueUA",
-  23: "https://www.youtube.com/watch?v=qBPYU93OkOs",
-  24: "https://www.youtube.com/watch?v=qF0gBrO4gIY",
-  25: "https://www.youtube.com/watch?v=mv_JuLI-8lk",
-  26: "https://www.youtube.com/watch?v=g0fsM6Elu5c",
-  27: "https://www.youtube.com/watch?v=bbsMP75sPws",
-  28: "https://www.youtube.com/watch?v=SGIYmCdtbzg",
-  29: "https://www.youtube.com/watch?v=NeD0QwiLkdY",
-  30: "https://www.youtube.com/watch?v=kJnOQQ815LQ",
-  31: "https://www.youtube.com/watch?v=x7wrPEatuk4",
-  32: "https://www.youtube.com/watch?v=RsErNvzEQ5I",
-  33: "https://www.youtube.com/watch?v=ARKJfrMM29E",
-  34: "https://www.youtube.com/watch?v=32oVRcayvSU",
-  35: "https://www.youtube.com/watch?v=yjE8RgR4m-c",
-  36: "https://www.youtube.com/watch?v=hYQcf8H8yJE",
-  37: "https://www.youtube.com/watch?v=Dcvm3PpOuiA",
-  38: "https://www.youtube.com/watch?v=WaO47gh0fVw",
-  39: "https://www.youtube.com/watch?v=9JTgv3QV6bI",
-  40: "https://www.youtube.com/watch?v=PMKjbR5LQKo",
-  41: "https://www.youtube.com/watch?v=NpSosoi5biU",
-  42: "https://www.youtube.com/watch?v=wOSyYscrXLE",
-  43: "https://www.youtube.com/watch?v=EsyWY3MWApQ",
-  44: "https://www.youtube.com/watch?v=wSQCw8IEjOA",
-  45: "https://www.youtube.com/watch?v=23-PoqDc7yM",
-  46: "https://www.youtube.com/watch?v=zFtMTQMJtp0",
-  47: "https://www.youtube.com/watch?v=kBLdR1J8Je4",
-  48: "https://www.youtube.com/watch?v=kzMZO0H-rEU",
-  49: "https://www.youtube.com/watch?v=3w3VtH2AcDU",
-  50: "https://www.youtube.com/watch?v=82Mr8O7TUfI",
-  51: "https://www.youtube.com/watch?v=7k-A8mQ7Hmo",
-  52: "https://www.youtube.com/watch?v=pRQX6Xp2B48",
-  53: "https://www.youtube.com/watch?v=VfIJSc6KWWk",
-  54: "https://www.youtube.com/watch?v=HqqrOod1fK4",
-  55: "https://www.youtube.com/watch?v=24qN5CxA758",
-};
+type Level = (typeof levels)[number];
+type ApprovedFixture = (typeof approvedPlatformLinksFixture)[number];
 
 const fail = (message: string): never => {
   throw new Error(message);
@@ -78,6 +24,15 @@ const fail = (message: string): never => {
 
 const assert = (condition: unknown, message: string) => {
   if (!condition) fail(message);
+};
+
+const fixtureById = new Map<number, ApprovedFixture>(
+  approvedPlatformLinksFixture.map((fixture) => [fixture.id, fixture])
+);
+
+const knownCatalogArtistAliasesById: Record<number, string> = {
+  45: "יפית",
+  48: "חן אהרוני ואסתי",
 };
 
 const decodeHtml = (value: string) =>
@@ -107,7 +62,7 @@ const assertNoPlatformLinks = (html: string, label: string) => {
   assert(!anchors.appleMusic, `${label}: Apple Music link rendered before reveal`);
 };
 
-const expectedYoutubeHref = (level: (typeof levels)[number]) => {
+const expectedYoutubeHref = (level: Level) => {
   if (level.youtubeVerified && level.youtubeUrl) return level.youtubeUrl;
   if (level.youtubeSearchUrl) return level.youtubeSearchUrl;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(
@@ -117,16 +72,17 @@ const expectedYoutubeHref = (level: (typeof levels)[number]) => {
 
 const assertRenderedLinks = (
   html: string,
-  level: (typeof levels)[number],
+  level: Level,
+  fixture: ApprovedFixture,
   mode: "Classic" | "Party"
 ) => {
   assert(
-    html.includes(level.songName),
-    `${mode} ID ${level.id}: displayed song name is missing`
+    html.includes(fixture.songName),
+    `${mode} ID ${level.id}: displayed song name is missing. Expected ${fixture.songName}`
   );
   assert(
     html.includes(level.artistName),
-    `${mode} ID ${level.id}: displayed artist name is missing`
+    `${mode} ID ${level.id}: displayed artist name is missing. Expected ${level.artistName}`
   );
 
   const anchors = extractAnchors(html);
@@ -137,21 +93,25 @@ const assertRenderedLinks = (
     )}, got ${anchors.youtube}`
   );
   assert(
-    anchors.spotify === level.spotifyUrl,
-    `${mode} ID ${level.id}: Spotify href mismatch. Expected ${level.spotifyUrl}, got ${anchors.spotify}`
+    anchors.youtube === fixture.youtubeUrl,
+    `${mode} ID ${level.id}: rendered YouTube href does not match approved fixture. Expected ${fixture.youtubeUrl}, got ${anchors.youtube}`
+  );
+  assert(
+    anchors.spotify === fixture.spotifyUrl,
+    `${mode} ID ${level.id}: Spotify href mismatch. Expected ${fixture.spotifyUrl}, got ${anchors.spotify}`
   );
 
-  if (level.appleMusicUrl) {
+  if (fixture.appleMusicUrl) {
     assert(
-      anchors.appleMusic === level.appleMusicUrl,
-      `${mode} ID ${level.id}: Apple Music href mismatch. Expected ${level.appleMusicUrl}, got ${anchors.appleMusic}`
+      anchors.appleMusic === fixture.appleMusicUrl,
+      `${mode} ID ${level.id}: Apple Music href mismatch. Expected ${fixture.appleMusicUrl}, got ${anchors.appleMusic}`
     );
   } else {
     assert(!anchors.appleMusic, `${mode} ID ${level.id}: unexpected Apple Music link`);
   }
 };
 
-const renderClassic = (level: (typeof levels)[number]) =>
+const renderClassic = (level: Level) =>
   renderToStaticMarkup(
     <SuccessScreen
       songNumber={level.id}
@@ -177,7 +137,7 @@ const renderClassic = (level: (typeof levels)[number]) =>
     />
   );
 
-const renderParty = (level: (typeof levels)[number], isRevealed = true) =>
+const renderParty = (level: Level, isRevealed = true) =>
   renderToStaticMarkup(
     <OfflinePartyRound
       currentRound={1}
@@ -195,6 +155,64 @@ const renderParty = (level: (typeof levels)[number], isRevealed = true) =>
       onQuit={() => {}}
     />
   );
+
+const findDuplicates = (values: Array<string | undefined>) => {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const value of values) {
+    if (!value) continue;
+    if (seen.has(value)) duplicates.add(value);
+    seen.add(value);
+  }
+  return [...duplicates];
+};
+
+const assertFixtureIntegrity = () => {
+  assert(
+    approvedPlatformLinksFixture.length === 55,
+    `Expected 55 fixture rows, found ${approvedPlatformLinksFixture.length}`
+  );
+  assert(
+    fixtureById.size === 55,
+    "Fixture IDs are duplicated or missing"
+  );
+
+  for (let id = 1; id <= 55; id += 1) {
+    assert(fixtureById.has(id), `Approved fixture is missing ID ${id}`);
+  }
+
+  const duplicateYoutubeUrls = findDuplicates(
+    approvedPlatformLinksFixture.map((fixture) => fixture.youtubeUrl)
+  );
+  const duplicateSpotifyUrls = findDuplicates(
+    approvedPlatformLinksFixture.map((fixture) => fixture.spotifyUrl)
+  );
+  assert(
+    duplicateYoutubeUrls.length === 0,
+    `Approved fixture has duplicate YouTube URLs: ${duplicateYoutubeUrls.join(", ")}`
+  );
+  assert(
+    duplicateSpotifyUrls.length === 0,
+    `Approved fixture has duplicate Spotify URLs: ${duplicateSpotifyUrls.join(", ")}`
+  );
+
+  assert(
+    fixtureById.get(2)?.youtubeUrl === "https://www.youtube.com/watch?v=kJnOQQ815LQ",
+    `Fixture ID 2 YouTube URL is wrong: ${fixtureById.get(2)?.youtubeUrl}`
+  );
+  assert(
+    fixtureById.get(6)?.youtubeUrl === "https://www.youtube.com/watch?v=ZOf7aMbzQAM",
+    `Fixture ID 6 YouTube URL is wrong: ${fixtureById.get(6)?.youtubeUrl}`
+  );
+  assert(
+    fixtureById.get(7)?.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
+    `Fixture ID 7 YouTube URL is wrong: ${fixtureById.get(7)?.youtubeUrl}`
+  );
+  assert(
+    fixtureById.get(30)?.youtubeUrl === "https://www.youtube.com/watch?v=NeD0QwiLkdY",
+    `Fixture ID 30 YouTube URL is wrong: ${fixtureById.get(30)?.youtubeUrl}`
+  );
+};
 
 const auditStaticCatalog = () => {
   assert(levels.length === 55, `Expected 55 levels, found ${levels.length}`);
@@ -215,6 +233,19 @@ const auditStaticCatalog = () => {
 
   for (const level of levels) {
     const metadata = songCoverMetadataById[level.id];
+    const fixture = fixtureById.get(level.id);
+    assert(fixture, `Approved fixture is missing ID ${level.id}`);
+
+    assert(
+      level.songName === fixture!.songName,
+      `ID ${level.id}: level song name does not match approved fixture. Expected ${fixture!.songName}, got ${level.songName}`
+    );
+        const expectedCatalogArtist = knownCatalogArtistAliasesById[level.id] ?? fixture!.artistName;
+    assert(
+      level.artistName === expectedCatalogArtist,
+      `ID ${level.id}: level artist does not match approved fixture or documented catalog alias. Expected ${expectedCatalogArtist}, got ${level.artistName}`
+    );
+
     assert(
       level.youtubeUrl === metadata.youtubeUrl,
       `ID ${level.id}: level YouTube URL does not match metadata by ID`
@@ -227,9 +258,20 @@ const auditStaticCatalog = () => {
       level.appleMusicUrl === metadata.appleMusicUrl,
       `ID ${level.id}: level Apple Music URL does not match metadata by ID`
     );
+
+    assert(level.youtubeVerified === true, `ID ${level.id}: youtubeVerified must be true`);
+    assert(level.spotifyStatus === "verified", `ID ${level.id}: spotifyStatus must be verified`);
     assert(
-      level.youtubeUrl === expectedYoutubeUrlsById[level.id],
-      `ID ${level.id}: YouTube URL points to the wrong song. Expected ${expectedYoutubeUrlsById[level.id]}, got ${level.youtubeUrl}`
+      level.youtubeUrl === fixture!.youtubeUrl,
+      `ID ${level.id}: YouTube URL does not match approved fixture. Expected ${fixture!.youtubeUrl}, got ${level.youtubeUrl}`
+    );
+    assert(
+      level.spotifyUrl === fixture!.spotifyUrl,
+      `ID ${level.id}: Spotify URL does not match approved fixture. Expected ${fixture!.spotifyUrl}, got ${level.spotifyUrl}`
+    );
+    assert(
+      level.appleMusicUrl === fixture!.appleMusicUrl,
+      `ID ${level.id}: Apple Music URL does not match approved fixture. Expected ${fixture!.appleMusicUrl}, got ${level.appleMusicUrl}`
     );
   }
 
@@ -252,17 +294,6 @@ const auditStaticCatalog = () => {
     levelsSource.includes("songCoverMetadataById[level.id]"),
     "levels.ts must merge metadata by explicit level.id"
   );
-};
-
-const findDuplicates = (values: Array<string | undefined>) => {
-  const seen = new Set<string>();
-  const duplicates = new Set<string>();
-  for (const value of values) {
-    if (!value) continue;
-    if (seen.has(value)) duplicates.add(value);
-    seen.add(value);
-  }
-  return [...duplicates];
 };
 
 const auditPlatformGates = () => {
@@ -289,8 +320,10 @@ const auditPlatformGates = () => {
 
 const auditRenderedModes = () => {
   for (const level of levels) {
-    assertRenderedLinks(renderClassic(level), level, "Classic");
-    assertRenderedLinks(renderParty(level), level, "Party");
+    const fixture = fixtureById.get(level.id);
+    assert(fixture, `Approved fixture is missing ID ${level.id}`);
+    assertRenderedLinks(renderClassic(level), level, fixture!, "Classic");
+    assertRenderedLinks(renderParty(level), level, fixture!, "Party");
   }
 
   assertNoPlatformLinks(renderParty(levels[0], false), "Party unrevealed answer");
@@ -299,19 +332,25 @@ const auditRenderedModes = () => {
 const auditRegressionIdsSixAndSeven = () => {
   const rolex = levels.find((level) => level.id === 6);
   const masaUmatan = levels.find((level) => level.id === 7);
+  const rolexFixture = fixtureById.get(6);
+  const masaFixture = fixtureById.get(7);
   assert(rolex, "Missing ID 6");
   assert(masaUmatan, "Missing ID 7");
+  assert(rolexFixture, "Missing fixture ID 6");
+  assert(masaFixture, "Missing fixture ID 7");
 
   assert(rolex!.songName === "רולקס וקסקט", "ID 6 song name changed");
   assert(masaUmatan!.songName === "מסע ומתן", "ID 7 song name changed");
   assert(
-    rolex!.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
+    rolex!.youtubeUrl === "https://www.youtube.com/watch?v=ZOf7aMbzQAM",
     `ID 6 YouTube URL is wrong: ${rolex!.youtubeUrl}`
   );
   assert(
-    masaUmatan!.youtubeUrl === "https://www.youtube.com/watch?v=990F-bdP_k4",
+    masaUmatan!.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
     `ID 7 YouTube URL is wrong: ${masaUmatan!.youtubeUrl}`
   );
+  assert(rolex!.youtubeUrl === rolexFixture!.youtubeUrl, "ID 6 does not match approved fixture");
+  assert(masaUmatan!.youtubeUrl === masaFixture!.youtubeUrl, "ID 7 does not match approved fixture");
   assert(rolex!.youtubeUrl !== masaUmatan!.youtubeUrl, "IDs 6 and 7 share YouTube URLs");
   assert(
     extractAnchors(renderClassic(rolex!)).youtube === rolex!.youtubeUrl,
@@ -331,6 +370,7 @@ const auditRegressionIdsSixAndSeven = () => {
   );
 };
 
+assertFixtureIntegrity();
 auditStaticCatalog();
 auditPlatformGates();
 auditRenderedModes();
