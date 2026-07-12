@@ -55,6 +55,16 @@ const extractAnchors = (html: string): AnchorMap => {
   };
 };
 
+const youtubeVideoIdFromUrl = (url: string) => {
+  const parsed = new URL(url);
+
+  if (parsed.hostname.includes("youtu.be")) {
+    return parsed.pathname.slice(1);
+  }
+
+  return parsed.searchParams.get("v") ?? "";
+};
+
 const assertNoPlatformLinks = (html: string, label: string) => {
   const anchors = extractAnchors(html);
   assert(!anchors.youtube, `${label}: YouTube link rendered before reveal`);
@@ -95,6 +105,12 @@ const assertRenderedLinks = (
   assert(
     anchors.youtube === fixture.youtubeUrl,
     `${mode} ID ${level.id}: rendered YouTube href does not match approved fixture. Expected ${fixture.youtubeUrl}, got ${anchors.youtube}`
+  );
+  assert(
+    youtubeVideoIdFromUrl(anchors.youtube ?? "") === fixture.youtubeVideoId,
+    `${mode} ID ${level.id}: rendered YouTube video ID does not match verified fixture. Expected ${fixture.youtubeVideoId}, got ${youtubeVideoIdFromUrl(
+      anchors.youtube ?? ""
+    )}`
   );
   assert(
     anchors.spotify === fixture.spotifyUrl,
@@ -197,21 +213,37 @@ const assertFixtureIntegrity = () => {
   );
 
   assert(
-    fixtureById.get(2)?.youtubeUrl === "https://www.youtube.com/watch?v=kJnOQQ815LQ",
+    fixtureById.get(2)?.youtubeUrl === "https://www.youtube.com/watch?v=kmW2yAYhMmM",
     `Fixture ID 2 YouTube URL is wrong: ${fixtureById.get(2)?.youtubeUrl}`
   );
   assert(
-    fixtureById.get(6)?.youtubeUrl === "https://www.youtube.com/watch?v=ZOf7aMbzQAM",
+    fixtureById.get(6)?.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
     `Fixture ID 6 YouTube URL is wrong: ${fixtureById.get(6)?.youtubeUrl}`
   );
   assert(
-    fixtureById.get(7)?.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
+    fixtureById.get(7)?.youtubeUrl === "https://www.youtube.com/watch?v=990F-bdP_k4",
     `Fixture ID 7 YouTube URL is wrong: ${fixtureById.get(7)?.youtubeUrl}`
   );
   assert(
-    fixtureById.get(30)?.youtubeUrl === "https://www.youtube.com/watch?v=NeD0QwiLkdY",
+    fixtureById.get(30)?.youtubeUrl === "https://www.youtube.com/watch?v=kJnOQQ815LQ",
     `Fixture ID 30 YouTube URL is wrong: ${fixtureById.get(30)?.youtubeUrl}`
   );
+
+  for (const fixture of approvedPlatformLinksFixture) {
+    assert(fixture.youtubeVideoId, `Fixture ID ${fixture.id}: missing verified video ID`);
+    assert(
+      fixture.youtubeVideoId === youtubeVideoIdFromUrl(fixture.youtubeUrl),
+      `Fixture ID ${fixture.id}: youtubeVideoId does not match youtubeUrl`
+    );
+    assert(
+      fixture.youtubeVerifiedTitle.includes(fixture.songName),
+      `Fixture ID ${fixture.id}: verified YouTube title does not include song name`
+    );
+    assert(
+      fixture.youtubeVerifiedAuthor,
+      `Fixture ID ${fixture.id}: missing verified YouTube author/channel`
+    );
+  }
 };
 
 const auditStaticCatalog = () => {
@@ -342,12 +374,22 @@ const auditRegressionIdsSixAndSeven = () => {
   assert(rolex!.songName === "רולקס וקסקט", "ID 6 song name changed");
   assert(masaUmatan!.songName === "מסע ומתן", "ID 7 song name changed");
   assert(
-    rolex!.youtubeUrl === "https://www.youtube.com/watch?v=ZOf7aMbzQAM",
+    rolex!.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
     `ID 6 YouTube URL is wrong: ${rolex!.youtubeUrl}`
   );
   assert(
-    masaUmatan!.youtubeUrl === "https://www.youtube.com/watch?v=7nVoHd4iFuw",
+    masaUmatan!.youtubeUrl === "https://www.youtube.com/watch?v=990F-bdP_k4",
     `ID 7 YouTube URL is wrong: ${masaUmatan!.youtubeUrl}`
+  );
+  assert(rolexFixture!.youtubeVideoId === "7nVoHd4iFuw", "ID 6 video ID is wrong");
+  assert(masaFixture!.youtubeVideoId === "990F-bdP_k4", "ID 7 video ID is wrong");
+  assert(
+    rolexFixture!.youtubeVerifiedTitle.includes("רולקס וקסקט"),
+    "ID 6 verified YouTube title does not match רולקס וקסקט"
+  );
+  assert(
+    masaFixture!.youtubeVerifiedTitle.includes("מסע ומתן"),
+    "ID 7 verified YouTube title does not match מסע ומתן"
   );
   assert(rolex!.youtubeUrl === rolexFixture!.youtubeUrl, "ID 6 does not match approved fixture");
   assert(masaUmatan!.youtubeUrl === masaFixture!.youtubeUrl, "ID 7 does not match approved fixture");
